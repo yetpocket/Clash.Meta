@@ -34,8 +34,9 @@ const (
 )
 
 type ProxySchema struct {
-	Proxies []map[string]any `yaml:"proxies"`
+	Proxies []C.RawProxy `yaml:"proxies"`
 }
+
 
 // ProxySetProvider for auto gc
 type ProxySetProvider struct {
