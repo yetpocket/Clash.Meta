@@ -1,16 +1,12 @@
 package provider
 
 import (
-	"bytes"
-	"crypto/md5"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"net/http"
 	"runtime"
-	"sync"
 	"strings"
 	"time"
 
@@ -23,8 +19,7 @@ import (
 	types "github.com/Dreamacro/clash/constant/provider"
 	"github.com/Dreamacro/clash/log"
 	"github.com/Dreamacro/clash/tunnel/statistic"
-	"github.com/phuslu/log"
-	"github.com/samber/lo"	
+
 	"github.com/dlclark/regexp2"
 	"gopkg.in/yaml.v3"
 )
@@ -34,9 +29,8 @@ const (
 )
 
 type ProxySchema struct {
-	Proxies []C.RawProxy `yaml:"proxies"`
+	Proxies []map[string]any `yaml:"proxies"`
 }
-
 
 // ProxySetProvider for auto gc
 type ProxySetProvider struct {
@@ -305,17 +299,12 @@ func proxiesParseAndFilter(filter string, excludeFilter string, excludeTypeArray
 		if err := yaml.Unmarshal(buf, schema); err != nil {
 			proxies, err1 := convert.ConvertsV2Ray(buf)
 			if err1 != nil {
-				proxies, err1 = convert.ConvertsWireGuard(buf)
+				return nil, fmt.Errorf("%w, %w", err, err1)
 			}
-			if err1 != nil {
-				return nil, errors.New("parse proxy provider failure, invalid data format")
-			}
-			schema.Proxies = lo.Map(proxies, func(m map[string]any, _ int) C.RawProxy {
-				return C.RawProxy{M: m}
-			})
+			schema.Proxies = proxies
 		}
 
-		if len(schema.Proxies) == 0 {
+		if schema.Proxies == nil {
 			return nil, errors.New("file must have a `proxies` field")
 		}
 
