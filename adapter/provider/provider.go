@@ -1,12 +1,16 @@
 package provider
 
 import (
+	"bytes"
+	"crypto/md5"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"net/http"
 	"runtime"
+	"sync"
 	"strings"
 	"time"
 
@@ -19,7 +23,8 @@ import (
 	types "github.com/Dreamacro/clash/constant/provider"
 	"github.com/Dreamacro/clash/log"
 	"github.com/Dreamacro/clash/tunnel/statistic"
-
+	"github.com/phuslu/log"
+	"github.com/samber/lo"	
 	"github.com/dlclark/regexp2"
 	"gopkg.in/yaml.v3"
 )
