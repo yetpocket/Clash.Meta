@@ -299,12 +299,17 @@ func proxiesParseAndFilter(filter string, excludeFilter string, excludeTypeArray
 		if err := yaml.Unmarshal(buf, schema); err != nil {
 			proxies, err1 := convert.ConvertsV2Ray(buf)
 			if err1 != nil {
-				return nil, fmt.Errorf("%w, %w", err, err1)
+				proxies, err1 = convert.ConvertsWireGuard(buf)
 			}
-			schema.Proxies = proxies
+			if err1 != nil {
+				return nil, errors.New("parse proxy provider failure, invalid data format")
+			}
+			schema.Proxies = lo.Map(proxies, func(m map[string]any, _ int) C.RawProxy {
+				return C.RawProxy{M: m}
+			})
 		}
 
-		if schema.Proxies == nil {
+		if len(schema.Proxies) == 0 {
 			return nil, errors.New("file must have a `proxies` field")
 		}
 
