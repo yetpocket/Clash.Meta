@@ -75,9 +75,9 @@ func Start(addr string, tlsAddr string, secret string,
 			return r
 		}())
 	}
+	r.Get("/", hello)
 	r.Group(func(r chi.Router) {
 		r.Use(authentication)
-		r.Get("/", hello)
 		r.Get("/logs", getLogs)
 		r.Get("/traffic", traffic)
 		r.Get("/memory", memory)
@@ -189,7 +189,7 @@ func authentication(next http.Handler) http.Handler {
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	render.JSON(w, r, render.M{"hello": "clash.meta"})
+	http.Redirect(w, r,"/ui", http.StatusPermanentRedirect);
 }
 
 func traffic(w http.ResponseWriter, r *http.Request) {

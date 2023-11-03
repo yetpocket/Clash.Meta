@@ -1,1042 +1,250 @@
-# port: 7890 # HTTP(S) 代理服务器端口
-# socks-port: 7891 # SOCKS5 代理端口
-mixed-port: 10801 # HTTP(S) 和 SOCKS 代理混合端口
-# redir-port: 7892 # 透明代理端口，用于 Linux 和 MacOS
-
-# Transparent proxy server port for Linux (TProxy TCP and TProxy UDP)
-# tproxy-port: 7893
-
-allow-lan: true # 允许局域网连接
-bind-address: "*" # 绑定 IP 地址，仅作用于 allow-lan 为 true，'*'表示所有地址
-authentication: # http,socks入口的验证用户名，密码
-  - "username:password"
-skip-auth-prefixes: # 设置跳过验证的IP段
-  - 127.0.0.1/8
-  - ::1/128
-
-#  find-process-mode has 3 values:always, strict, off
-#  - always, 开启，强制匹配所有进程
-#  - strict, 默认，由 clash 判断是否开启
-#  - off, 不匹配进程，推荐在路由器上使用此模式
-find-process-mode: strict
-
-mode: rule
-
-#自定义 geodata url
-geox-url:
-  geoip: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat"
-  geosite: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"
-  mmdb: "https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb"
-
-log-level: debug # 日志等级 silent/error/warning/info/debug
-
-ipv6: true # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
-
-tls:
-  certificate: string # 证书 PEM 格式，或者 证书的路径
-  private-key: string # 证书对应的私钥 PEM 格式，或者私钥路径
-  custom-certifactes:
-    - |
-      -----BEGIN CERTIFICATE-----
-      format/pem...
-      -----END CERTIFICATE-----
-
-external-controller: 0.0.0.0:9093 # RESTful API 监听地址
-external-controller-tls: 0.0.0.0:9443 # RESTful API HTTPS 监听地址，需要配置 tls 部分配置文件
-# secret: "123456" # `Authorization:Bearer ${secret}`
-
-# tcp-concurrent: true # TCP 并发连接所有 IP, 将使用最快握手的 TCP
-
-# 配置 WEB UI 目录，使用 http://{{external-controller}}/ui 访问
-external-ui: /path/to/ui/folder/
-external-ui-name: xd
-external-ui-url: "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
-
-# interface-name: en0 # 设置出口网卡
-
-# 全局 TLS 指纹，优先低于 proxy 内的 client-fingerprint
-# 可选： "chrome","firefox","safari","ios","random","none" options.
-# Utls is currently support TLS transport in TCP/grpc/WS/HTTP for VLESS/Vmess and trojan.
-global-client-fingerprint: chrome
-
-#  TCP keep alive interval
-keep-alive-interval: 15
-
-# routing-mark:6666 # 配置 fwmark 仅用于 Linux
+port: 8888
+socks-port: 8889
+mixed-port: 8899
+allow-lan: true
+mode: Rule
+log-level: info
+external-controller: '127.0.0.1:6170'
+secret: dler
 experimental:
-  # Disable quic-go GSO support. This may result in reduced performance on Linux.
-  # This is not recommended for most users.
-  # Only users encountering issues with quic-go's internal implementation should enable this,
-  # and they should disable it as soon as the issue is resolved.
-  # This field will be removed when quic-go fixes all their issues in GSO.
-  # This equivalent to the environment variable QUIC_GO_DISABLE_GSO=1.
-  #quic-go-disable-gso: true
-
-# 类似于 /etc/hosts, 仅支持配置单个 IP
-hosts:
-# '*.clash.dev': 127.0.0.1
-# '.dev': 127.0.0.1
-# 'alpha.clash.dev': '::1'
-# test.com: [1.1.1.1, 2.2.2.2]
-# clash.lan: clash # clash 为特别字段，将加入本地所有网卡的地址
-# baidu.com: google.com # 只允许配置一个别名
-
-profile: # 存储 select 选择记录
-  store-selected: false
-
-  # 持久化 fake-ip
-  store-fake-ip: true
-
-# Tun 配置
-tun:
-  enable: false
-  stack: system # gvisor / lwip
-  dns-hijack:
-    - 0.0.0.0:53 # 需要劫持的 DNS
-  # auto-detect-interface: true # 自动识别出口网卡
-  # auto-route: true # 配置路由表
-  # mtu: 9000 # 最大传输单元
-  # strict-route: true # 将所有连接路由到tun来防止泄漏，但你的设备将无法其他设备被访问
-  inet4-route-address: # 启用 auto_route 时使用自定义路由而不是默认路由
-    - 0.0.0.0/1
-    - 128.0.0.0/1
-  inet6-route-address: # 启用 auto_route 时使用自定义路由而不是默认路由
-    - "::/1"
-    - "8000::/1"
-  # endpoint-independent-nat: false # 启用独立于端点的 NAT
-  # include-uid: # UID 规则仅在 Linux 下被支持，并且需要 auto_route
-  # - 0
-  # include-uid-range: # 限制被路由的的用户范围
-  # - 1000-99999
-  # exclude-uid: # 排除路由的的用户
-  #- 1000
-  # exclude-uid-range: # 排除路由的的用户范围
-  # - 1000-99999
-
-  # Android 用户和应用规则仅在 Android 下被支持
-  # 并且需要 auto-route
-
-  # include-android-user: # 限制被路由的 Android 用户
-  # - 0
-  # - 10
-  # include-package: # 限制被路由的 Android 应用包名
-  # - com.android.chrome
-  # exclude-package: # 排除被路由的 Android 应用包名
-  # - com.android.captiveportallogin
-
-#ebpf配置
-ebpf:
-  auto-redir: # redirect 模式，仅支持 TCP
-    - eth0
-  redirect-to-tun: # UDP+TCP 使用该功能请勿启用 auto-route
-    - eth0
-
-# 嗅探域名 可选配置
-sniffer:
-  enable: false
-  ## 对 redir-host 类型识别的流量进行强制嗅探
-  ## 如：Tun、Redir 和 TProxy 并 DNS 为 redir-host 皆属于
-  # force-dns-mapping: false
-  ## 对所有未获取到域名的流量进行强制嗅探
-  # parse-pure-ip: false
-  # 是否使用嗅探结果作为实际访问，默认 true
-  # 全局配置，优先级低于 sniffer.sniff 实际配置
-  override-destination: false
-  sniff: # TLS 和 QUIC 默认如果不配置 ports 默认嗅探 443
-    QUIC:
-    #  ports: [ 443 ]
-    TLS:
-    #  ports: [443, 8443]
-
-    # 默认嗅探 80
-    HTTP: # 需要嗅探的端口
-      ports: [80, 8080-8880]
-      # 可覆盖 sniffer.override-destination
-      override-destination: true
-  force-domain:
-    - +.v2ex.com
-  ## 对嗅探结果进行跳过
-  # skip-domain:
-  #   - Mijia Cloud
-  # 需要嗅探协议
-  # 已废弃，若 sniffer.sniff 配置则此项无效
-  sniffing:
-    - tls
-    - http
-  # 强制对此域名进行嗅探
-
-  # 仅对白名单中的端口进行嗅探，默认为 443，80
-  # 已废弃，若 sniffer.sniff 配置则此项无效
-  port-whitelist:
-    - "80"
-    - "443"
-    # - 8000-9999
-
-tunnels: # one line config
-  - tcp/udp,127.0.0.1:6553,114.114.114.114:53,proxy
-  - tcp,127.0.0.1:6666,rds.mysql.com:3306,vpn
-  # full yaml config
-  - network: [tcp, udp]
-    address: 127.0.0.1:7777
-    target: target.com
-    proxy: proxy
-
-# DNS配置
-dns:
-  enable: false # 关闭将使用系统 DNS
-  prefer-h3: true # 开启 DoH 支持 HTTP/3，将并发尝试
-  listen: 0.0.0.0:53 # 开启 DNS 服务器监听
-  # ipv6: false # false 将返回 AAAA 的空结果
-  # ipv6-timeout: 300 # 单位：ms，内部双栈并发时，向上游查询 AAAA 时，等待 AAAA 的时间，默认 100ms
-  # 用于解析 nameserver，fallback 以及其他DNS服务器配置的，DNS 服务域名
-  # 只能使用纯 IP 地址，可使用加密 DNS
-  default-nameserver:
-    - 114.114.114.114
-    - 8.8.8.8
-    - tls://1.12.12.12:853
-    - tls://223.5.5.5:853
-    - system # append DNS server from system configuration. If not found, it would print an error log and skip.
-  enhanced-mode: fake-ip # or redir-host
-
-  fake-ip-range: 198.18.0.1/16 # fake-ip 池设置
-
-  # use-hosts: true # 查询 hosts
-
-  # 配置不使用fake-ip的域名
-  # fake-ip-filter:
-  #   - '*.lan'
-  #   - localhost.ptlogin2.qq.com
-
-  # DNS主要域名配置
-  # 支持 UDP，TCP，DoT，DoH，DoQ
-  # 这部分为主要 DNS 配置，影响所有直连，确保使用对大陆解析精准的 DNS
-  nameserver:
-    - 114.114.114.114 # default value
-    - 8.8.8.8 # default value
-    - tls://223.5.5.5:853 # DNS over TLS
-    - https://doh.pub/dns-query # DNS over HTTPS
-    - https://dns.alidns.com/dns-query#h3=true # 强制 HTTP/3，与 perfer-h3 无关，强制开启 DoH 的 HTTP/3 支持，若不支持将无法使用
-    - https://mozilla.cloudflare-dns.com/dns-query#DNS&h3=true # 指定策略组和使用 HTTP/3
-    - dhcp://en0 # dns from dhcp
-    - quic://dns.adguard.com:784 # DNS over QUIC
-    # - '8.8.8.8#en0' # 兼容指定DNS出口网卡
-
-  # 当配置 fallback 时，会查询 nameserver 中返回的 IP 是否为 CN，非必要配置
-  # 当不是 CN，则使用 fallback 中的 DNS 查询结果
-  # 确保配置 fallback 时能够正常查询
-  # fallback:
-  #   - tcp://1.1.1.1
-  #   - 'tcp://1.1.1.1#ProxyGroupName' # 指定 DNS 过代理查询，ProxyGroupName 为策略组名或节点名，过代理配置优先于配置出口网卡，当找不到策略组或节点名则设置为出口网卡
-
-  # 专用于节点域名解析的 DNS 服务器，非必要配置项
-  # 配置服务器若查询失败将使用 nameserver，非并发查询
-  # proxy-server-nameserver:
-  # - https://dns.google/dns-query
-  # - tls://one.one.one.one
-
-  # 配置 fallback 使用条件
-  # fallback-filter:
-  #   geoip: true # 配置是否使用 geoip
-  #   geoip-code: CN # 当 nameserver 域名的 IP 查询 geoip 库为 CN 时，不使用 fallback 中的 DNS 查询结果
-  #   配置强制 fallback，优先于 IP 判断，具体分类自行查看 geosite 库
-  #   geosite:
-  #     - gfw
-  #   如果不匹配 ipcidr 则使用 nameservers 中的结果
-  #   ipcidr:
-  #     - 240.0.0.0/4
-  #   domain:
-  #     - '+.google.com'
-  #     - '+.facebook.com'
-  #     - '+.youtube.com'
-
-  # 配置查询域名使用的 DNS 服务器
-  nameserver-policy:
-    #   'www.baidu.com': '114.114.114.114'
-    #   '+.internal.crop.com': '10.0.0.1'
-    "geosite:cn,private,apple":
-      - https://doh.pub/dns-query
-      - https://dns.alidns.com/dns-query
-    "geosite:category-ads-all": rcode://success
-    "www.baidu.com,+.google.cn": [223.5.5.5, https://dns.alidns.com/dns-query]
-    ## global，dns 为 rule-providers 中的名为 global 和 dns 规则订阅，
-    ## 且 behavior 必须为 domain/classical，当为 classical 时仅会生效域名类规则
-    # "rule-set:global,dns": 8.8.8.8
-
-proxies: # socks5
-  - name: "socks"
-    type: socks5
-    server: server
-    port: 443
-    # username: username
-    # password: password
-    # tls: true
-    # fingerprint: xxxx
-    # skip-cert-verify: true
-    # udp: true
-    # ip-version: ipv6
-
-  # http
-  - name: "http"
-    type: http
-    server: server
-    port: 443
-    # username: username
-    # password: password
-    # tls: true # https
-    # skip-cert-verify: true
-    # sni: custom.com
-    # fingerprint: xxxx # 同 experimental.fingerprints 使用 sha256 指纹，配置协议独立的指纹，将忽略 experimental.fingerprints
-    # ip-version: dual
-
-  # Snell
-  # Beware that there's currently no UDP support yet
-  - name: "snell"
-    type: snell
-    server: server
-    port: 44046
-    psk: yourpsk
-    # version: 2
-    # obfs-opts:
-    # mode: http # or tls
-    # host: bing.com
-
-  # Shadowsocks
-  # cipher支持:
-  #   aes-128-gcm aes-192-gcm aes-256-gcm
-  #   aes-128-cfb aes-192-cfb aes-256-cfb
-  #   aes-128-ctr aes-192-ctr aes-256-ctr
-  #   rc4-md5 chacha20-ietf xchacha20
-  #   chacha20-ietf-poly1305 xchacha20-ietf-poly1305
-  #   2022-blake3-aes-128-gcm 2022-blake3-aes-256-gcm 2022-blake3-chacha20-poly1305
-  - name: "ss1"
-    type: ss
-    server: server
-    port: 443
-    cipher: chacha20-ietf-poly1305
-    password: "password"
-    # udp: true
-    # udp-over-tcp: false
-    # ip-version: ipv4 # 设置节点使用 IP 版本，可选：dual，ipv4，ipv6，ipv4-prefer，ipv6-prefer。默认使用 dual
-    # ipv4：仅使用 IPv4  ipv6：仅使用 IPv6
-    # ipv4-prefer：优先使用 IPv4 对于 TCP 会进行双栈解析，并发链接但是优先使用 IPv4 链接,
-    # UDP 则为双栈解析，获取结果中的第一个 IPv4
-    # ipv6-prefer 同 ipv4-prefer
-    # 现有协议都支持此参数，TCP 效果仅在开启 tcp-concurrent 生效
-    smux:
-      enabled: false
-      protocol: smux # smux/yamux/h2mux
-      # max-connections: 4 # Maximum connections. Conflict with max-streams.
-      # min-streams: 4 # Minimum multiplexed streams in a connection before opening a new connection. Conflict with max-streams.
-      # max-streams: 0 # Maximum multiplexed streams in a connection before opening a new connection. Conflict with max-connections and min-streams.
-      # padding: false # Enable padding. Requires sing-box server version 1.3-beta9 or later.
-      # statistic: false # 控制是否将底层连接显示在面板中，方便打断底层连接
-      # only-tcp: false # 如果设置为true, smux的设置将不会对udp生效，udp连接会直接走底层协议
-
-  - name: "ss2"
-    type: ss
-    server: server
-    port: 443
-    cipher: chacha20-ietf-poly1305
-    password: "password"
-    plugin: obfs
-    plugin-opts:
-      mode: tls # or http
-      # host: bing.com
-
-  - name: "ss3"
-    type: ss
-    server: server
-    port: 443
-    cipher: chacha20-ietf-poly1305
-    password: "password"
-    plugin: v2ray-plugin
-    plugin-opts:
-      mode: websocket # no QUIC now
-    # tls: true # wss
-    # 可使用 openssl x509 -noout -fingerprint -sha256 -inform pem -in yourcert.pem 获取
-    # 配置指纹将实现 SSL Pining 效果
-    # fingerprint: xxxx
-    # skip-cert-verify: true
-    # host: bing.com
-    # path: "/"
-    # mux: true
-    # headers:
-    #   custom: value
-
-  - name: "ss4-shadow-tls"
-    type: ss
-    server: server
-    port: 443
-    cipher: chacha20-ietf-poly1305
-    password: "password"
-    plugin: shadow-tls
-    client-fingerprint: chrome
-    plugin-opts:
-      host: "cloud.tencent.com"
-      password: "shadow_tls_password"
-      version: 2 # support 1/2/3
-
-  - name: "ss-restls-tls13"
-    type: ss
-    server: [YOUR_SERVER_IP]
-    port: 443
-    cipher: chacha20-ietf-poly1305
-    password: [YOUR_SS_PASSWORD]
-    client-fingerprint:
-      chrome # One of: chrome, ios, firefox or safari
-      # 可以是chrome, ios, firefox, safari中的一个
-    plugin: restls
-    plugin-opts:
-      host:
-        "www.microsoft.com" # Must be a TLS 1.3 server
-        # 应当是一个TLS 1.3 服务器
-      password: [YOUR_RESTLS_PASSWORD]
-      version-hint: "tls13"
-      # Control your post-handshake traffic through restls-script
-      # Hide proxy behaviors like "tls in tls".
-      # see https://github.com/3andne/restls/blob/main/Restls-Script:%20Hide%20Your%20Proxy%20Traffic%20Behavior.md
-      # 用restls剧本来控制握手后的行为，隐藏"tls in tls"等特征
-      # 详情：https://github.com/3andne/restls/blob/main/Restls-Script:%20%E9%9A%90%E8%97%8F%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%90%86%E8%A1%8C%E4%B8%BA.md
-      restls-script: "300?100<1,400~100,350~100,600~100,300~200,300~100"
-
-  - name: "ss-restls-tls12"
-    type: ss
-    server: [YOUR_SERVER_IP]
-    port: 443
-    cipher: chacha20-ietf-poly1305
-    password: [YOUR_SS_PASSWORD]
-    client-fingerprint:
-      chrome # One of: chrome, ios, firefox or safari
-      # 可以是chrome, ios, firefox, safari中的一个
-    plugin: restls
-    plugin-opts:
-      host:
-        "vscode.dev" # Must be a TLS 1.2 server
-        # 应当是一个TLS 1.2 服务器
-      password: [YOUR_RESTLS_PASSWORD]
-      version-hint: "tls12"
-      restls-script: "1000?100<1,500~100,350~100,600~100,400~200"
-
-  # vmess
-  # cipher支持 auto/aes-128-gcm/chacha20-poly1305/none
-  - name: "vmess"
-    type: vmess
-    server: server
-    port: 443
-    uuid: uuid
-    alterId: 32
-    cipher: auto
-    # udp: true
-    # tls: true
-    # fingerprint: xxxx
-    # client-fingerprint: chrome    # Available: "chrome","firefox","safari","ios","random", currently only support TLS transport in TCP/GRPC/WS/HTTP for VLESS/Vmess and trojan.
-    # skip-cert-verify: true
-    # servername: example.com # priority over wss host
-    # network: ws
-    # ws-opts:
-    #   path: /path
-    #   headers:
-    #     Host: v2ray.com
-    #   max-early-data: 2048
-    #   early-data-header-name: Sec-WebSocket-Protocol
-
-  - name: "vmess-h2"
-    type: vmess
-    server: server
-    port: 443
-    uuid: uuid
-    alterId: 32
-    cipher: auto
-    network: h2
-    tls: true
-    # fingerprint: xxxx
-    h2-opts:
-      host:
-        - http.example.com
-        - http-alt.example.com
-      path: /
-
-  - name: "vmess-http"
-    type: vmess
-    server: server
-    port: 443
-    uuid: uuid
-    alterId: 32
-    cipher: auto
-    # udp: true
-    # network: http
-    # http-opts:
-    #   method: "GET"
-    #   path:
-    #     - '/'
-    #     - '/video'
-    #   headers:
-    #     Connection:
-    #       - keep-alive
-    # ip-version: ipv4 # 设置使用 IP 类型偏好，可选：ipv4，ipv6，dual，默认值：dual
-
-  - name: vmess-grpc
-    server: server
-    port: 443
-    type: vmess
-    uuid: uuid
-    alterId: 32
-    cipher: auto
-    network: grpc
-    tls: true
-    # fingerprint: xxxx
-    servername: example.com
-    # skip-cert-verify: true
-    grpc-opts:
-      grpc-service-name: "example"
-    # ip-version: ipv4
-
-  # vless
-  - name: "vless-tcp"
-    type: vless
-    server: server
-    port: 443
-    uuid: uuid
-    network: tcp
-    servername: example.com # AKA SNI
-    # flow: xtls-rprx-direct # xtls-rprx-origin  # enable XTLS
-    # skip-cert-verify: true
-    # fingerprint: xxxx
-    # client-fingerprint: random # Available: "chrome","firefox","safari","random","none"
-
-  - name: "vless-vision"
-    type: vless
-    server: server
-    port: 443
-    uuid: uuid
-    network: tcp
-    tls: true
-    udp: true
-    flow: xtls-rprx-vision
-    client-fingerprint: chrome
-    # fingerprint: xxxx
-    # skip-cert-verify: true
-
-  - name: "vless-reality-vision"
-    type: vless
-    server: server
-    port: 443
-    uuid: uuid
-    network: tcp
-    tls: true
-    udp: true
-    flow: xtls-rprx-vision
-    servername: www.microsoft.com # REALITY servername
-    reality-opts:
-      public-key: xxx
-      short-id: xxx # optional
-    client-fingerprint: chrome # cannot be empty
-
-  - name: "vless-reality-grpc"
-    type: vless
-    server: server
-    port: 443
-    uuid: uuid
-    network: grpc
-    tls: true
-    udp: true
-    flow:
-    # skip-cert-verify: true
-    client-fingerprint: chrome
-    servername: testingcf.jsdelivr.net
-    grpc-opts:
-      grpc-service-name: "grpc"
-    reality-opts:
-      public-key: CrrQSjAG_YkHLwvM2M-7XkKJilgL5upBKCp0od0tLhE
-      short-id: 10f897e26c4b9478
-
-  - name: "vless-ws"
-    type: vless
-    server: server
-    port: 443
-    uuid: uuid
-    udp: true
-    tls: true
-    network: ws
-    # client-fingerprint: random # Available: "chrome","firefox","safari","random","none"
-    servername: example.com # priority over wss host
-    # skip-cert-verify: true
-    # fingerprint: xxxx
-    ws-opts:
-      path: "/"
-      headers:
-        Host: example.com
-
-  # Trojan
-  - name: "trojan"
-    type: trojan
-    server: server
-    port: 443
-    password: yourpsk
-    # client-fingerprint: random # Available: "chrome","firefox","safari","random","none"
-    # fingerprint: xxxx
-    # udp: true
-    # sni: example.com # aka server name
-    # alpn:
-    #   - h2
-    #   - http/1.1
-    # skip-cert-verify: true
-
-  - name: trojan-grpc
-    server: server
-    port: 443
-    type: trojan
-    password: "example"
-    network: grpc
-    sni: example.com
-    # skip-cert-verify: true
-    # fingerprint: xxxx
-    udp: true
-    grpc-opts:
-      grpc-service-name: "example"
-
-  - name: trojan-ws
-    server: server
-    port: 443
-    type: trojan
-    password: "example"
-    network: ws
-    sni: example.com
-    # skip-cert-verify: true
-    # fingerprint: xxxx
-    udp: true
-    # ws-opts:
-    # path: /path
-    # headers:
-    #   Host: example.com
-
-  - name: "trojan-xtls"
-    type: trojan
-    server: server
-    port: 443
-    password: yourpsk
-    flow: "xtls-rprx-direct" # xtls-rprx-origin xtls-rprx-direct
-    flow-show: true
-    # udp: true
-    # sni: example.com # aka server name
-    # skip-cert-verify: true
-    # fingerprint: xxxx
-
-  #hysteria
-  - name: "hysteria"
-    type: hysteria
-    server: server.com
-    port: 443
-    # ports: 1000,2000-3000,5000 # port 不可省略,
-    auth_str: yourpassword # 将会在未来某个时候删除
-    # auth-str: yourpassword
-    # obfs: obfs_str
-    # alpn:
-    #   - h3
-    protocol: udp # 支持 udp/wechat-video/faketcp
-    up: "30 Mbps" # 若不写单位，默认为 Mbps
-    down: "200 Mbps" # 若不写单位，默认为 Mbps
-    # sni: server.com
-    # skip-cert-verify: false
-    # recv_window_conn: 12582912 # 将会在未来某个时候删除
-    # recv-window-conn: 12582912
-    # recv_window: 52428800 # 将会在未来某个时候删除
-    # recv-window: 52428800
-    # ca: "./my.ca"
-    # ca_str: "xyz" # 将会在未来某个时候删除
-    # ca-str: "xyz"
-    # disable_mtu_discovery: false
-    # fingerprint: xxxx
-    # fast-open: true # 支持 TCP 快速打开，默认为 false
-
-  #hysteria2
-  - name: "hysteria2"
-    type: hysteria2
-    server: server.com
-    port: 443
-    #  up和down均不写或为0则使用BBR流控
-    # up: "30 Mbps" # 若不写单位，默认为 Mbps
-    # down: "200 Mbps" # 若不写单位，默认为 Mbps
-    password: yourpassword
-    # obfs: salamander # 默认为空，如果填写则开启obfs，目前仅支持salamander
-    # obfs-password: yourpassword
-    # sni: server.com
-    # skip-cert-verify: false
-    # fingerprint: xxxx
-    # alpn:
-    #   - h3
-    # ca: "./my.ca"
-    # ca-str: "xyz"
-
-  # wireguard
-  - name: "wg"
-    type: wireguard
-    server: 162.159.192.1
-    port: 2480
-    ip: 172.16.0.2
-    ipv6: fd01:5ca1:ab1e:80fa:ab85:6eea:213f:f4a5
-    public-key: Cr8hWlKvtDt7nrvf+f0brNQQzabAqrjfBvas9pmowjo=
-    #    pre-shared-key: 31aIhAPwktDGpH4JDhA8GNvjFXEf/a6+UaQRyOAiyfM=
-    private-key: eCtXsJZ27+4PbhDkHnB923tkUn2Gj59wZw5wFA75MnU=
-    udp: true
-    reserved: "U4An"
-    # 数组格式也是合法的
-    # reserved: [209,98,59]
-    # 一个出站代理的标识。当值不为空时，将使用指定的 proxy 发出连接
-    # dialer-proxy: "ss1"
-    # remote-dns-resolve: true # 强制dns远程解析，默认值为false
-    # dns: [ 1.1.1.1, 8.8.8.8 ] # 仅在remote-dns-resolve为true时生效
-    # 如果peers不为空，该段落中的allowed_ips不可为空；前面段落的server,port,ip,ipv6,public-key,pre-shared-key均会被忽略，但private-key会被保留且只能在顶层指定
-    # peers:
-    #   - server: 162.159.192.1
-    #     port: 2480
-    #     ip: 172.16.0.2
-    #     ipv6: fd01:5ca1:ab1e:80fa:ab85:6eea:213f:f4a5
-    #     public-key: Cr8hWlKvtDt7nrvf+f0brNQQzabAqrjfBvas9pmowjo=
-    #     # pre-shared-key: 31aIhAPwktDGpH4JDhA8GNvjFXEf/a6+UaQRyOAiyfM=
-    #     allowed_ips: ['0.0.0.0/0']
-    #     reserved: [209,98,59]
-
-  # tuic
-  - name: tuic
-    server: www.example.com
-    port: 10443
-    type: tuic
-    # tuicV4必须填写token （不可同时填写uuid和password）
-    token: TOKEN
-    # tuicV5必须填写uuid和password（不可同时填写token）
-    uuid: 00000000-0000-0000-0000-000000000001
-    password: PASSWORD_1
-    # ip: 127.0.0.1 # for overwriting the DNS lookup result of the server address set in option 'server'
-    # heartbeat-interval: 10000
-    # alpn: [h3]
-    disable-sni: true
-    reduce-rtt: true
-    request-timeout: 8000
-    udp-relay-mode: native # Available: "native", "quic". Default: "native"
-    # congestion-controller: bbr # Available: "cubic", "new_reno", "bbr". Default: "cubic"
-    # cwnd: 10 # default: 32
-    # max-udp-relay-packet-size: 1500
-    # fast-open: true
-    # skip-cert-verify: true
-    # max-open-streams: 20 # default 100, too many open streams may hurt performance
-    # sni: example.com
-    #
-    # meta和sing-box私有扩展，将ss-uot用于udp中继，开启此选项后udp-relay-mode将失效
-    # 警告，与原版tuic不兼容！！！
-    # udp-over-stream: false
-    # udp-over-stream-version: 1
-
-  # ShadowsocksR
-  # The supported ciphers (encryption methods): all stream ciphers in ss
-  # The supported obfses:
-  #   plain http_simple http_post
-  #   random_head tls1.2_ticket_auth tls1.2_ticket_fastauth
-  # The supported supported protocols:
-  #   origin auth_sha1_v4 auth_aes128_md5
-  #   auth_aes128_sha1 auth_chain_a auth_chain_b
-  - name: "ssr"
-    type: ssr
-    server: server
-    port: 443
-    cipher: chacha20-ietf
-    password: "password"
-    obfs: tls1.2_ticket_auth
-    protocol: auth_sha1_v4
-    # obfs-param: domain.tld
-    # protocol-param: "#"
-    # udp: true
-
+    ignore-resolve-fail: true
+cfw-latency-url: 'http://cp.cloudflare.com/generate_204'
+cfw-latency-timeout: 3000
+cfw-latency-type: 1
+cfw-conn-break-strategy: true
+clash-for-android:
+    ui-subtitle-pattern: '[一-龥]{2,4}'
+url-rewrite:
+    - '^https?:\/\/(www.)?(g|google)\.cn https://www.google.com 302'
+    - '^https?:\/\/(ditu|maps).google\.cn https://maps.google.com 302'
+proxies:
+    - { name: '🇷🇺 俄罗斯 Edge', type: vmess, server: ru1.qiangdong.xyz, port: 153, uuid: 209bec05-a6bf-37e0-a6a9-9c3ab5c22134, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇨🇦 加拿大 Edge', type: vmess, server: ca1.qiangdong.xyz, port: 153, uuid: 65ec19f1-285c-37e8-8b9e-e93089a47403, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇮🇳 印度 Edge', type: vmess, server: in1.qiangdong.xyz, port: 153, uuid: 200fe564-ba41-3c4c-a4ce-e94c08e9b225, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇨🇳 台湾 CHT [01]', type: vmess, server: cht1.qiangdong.xyz, port: 153, uuid: 09e2b227-e05c-3bc9-9ad6-89f17405ad57, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇨🇳 台湾 CHT [02]', type: vmess, server: cht2.qiangdong.xyz, port: 153, uuid: 2c84d7bc-a1fc-37dd-b9db-fcd0b4709dc8, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇨🇳 台湾 CHT [03]', type: vmess, server: cht3.qiangdong.xyz, port: 153, uuid: 80ef6c0f-fa4c-3618-b23a-e45775bfbde8, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇨🇳 台湾 Edge', type: vmess, server: tw1.qiangdong.xyz, port: 153, uuid: 48d30600-fb6d-3c1b-b8e5-9b780bd9b71f, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇹🇷 土耳其 Edge', type: vmess, server: tr1.qiangdong.xyz, port: 153, uuid: 2271cd99-d330-3d25-a4db-2c5b716ea9e3, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇧🇷 巴西 Edge', type: vmess, server: br1.qiangdong.xyz, port: 153, uuid: f24e5e4b-957e-37e1-bc19-51c42d74eac8, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇩🇪 德国 Edge', type: vmess, server: de1.qiangdong.xyz, port: 153, uuid: 52c223dd-c6cc-3a0c-b865-9e5e0ddfe10a, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇸🇬 新加坡 Edge [01]', type: vmess, server: sg1.qiangdong.xyz, port: 153, uuid: bdf5e7db-8132-3c4f-8098-de4e88e889de, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇸🇬 新加坡 Edge [02]', type: vmess, server: sg2.qiangdong.xyz, port: 153, uuid: f7280e4c-015d-348b-89b4-56fef3050bb5, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇸🇬 新加坡 Edge [03]', type: vmess, server: sg3.qiangdong.xyz, port: 153, uuid: 1dfaeb48-306d-3428-afae-c276ac539f54, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇯🇵 日本 BBTEC [01]', type: vmess, server: bbtec1.qiangdong.xyz, port: 153, uuid: b2093298-fd17-350e-ad6c-12fa0205a133, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇯🇵 日本 BBTEC [02]', type: vmess, server: bbtec2.qiangdong.xyz, port: 153, uuid: 2d0e8ba4-5ec0-3b91-a2c3-d3c1aa936c54, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇯🇵 日本 Edge [01]', type: vmess, server: jp1.qiangdong.xyz, port: 153, uuid: 7c407771-1fc0-3808-9232-4173aae527f2, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇯🇵 日本 Edge [02]', type: vmess, server: jp2.qiangdong.xyz, port: 153, uuid: 4fa70066-6acc-37b6-9dff-384be2cf6994, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇯🇵 日本 Edge [03]', type: vmess, server: jp3.qiangdong.xyz, port: 153, uuid: 7d55546b-dad7-37a8-bd44-9ce27d25ea2a, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇫🇷 法国 Edge', type: vmess, server: fr1.qiangdong.xyz, port: 153, uuid: f6540c53-ef64-3e5b-b00f-d95e1248478d, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇹🇭 泰国 Edge', type: vmess, server: th1.qiangdong.xyz, port: 153, uuid: bd8baa03-2fc7-3d89-97e6-850b75ea13d9, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇦🇺 澳大利亚 Edge', type: vmess, server: au1.qiangdong.xyz, port: 153, uuid: 81ebe818-5eb2-3f4a-aece-425f7db5e6bc, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇺🇸 美国 DMIT [01]', type: vmess, server: dmit_us1.qiangdong.xyz, port: 153, uuid: 5f2aca80-79a6-3e5b-805e-4e3ff80fc2f9, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇺🇸 美国 DMIT [02]', type: vmess, server: dmit_us2.qiangdong.xyz, port: 153, uuid: 1f95a5da-e3b8-38f1-970f-099a847c488f, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇺🇸 美国 Edge', type: vmess, server: us1.qiangdong.xyz, port: 153, uuid: ac5ac51c-5c46-39f5-8155-703cf5646635, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇬🇧 英国 Edge [01]', type: vmess, server: uk1.qiangdong.xyz, port: 153, uuid: 6a29b9a0-46b1-3469-8c7a-a1adc8f2f07f, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇬🇧 英国 Edge [02]', type: vmess, server: uk2.qiangdong.xyz, port: 153, uuid: e78f568e-6dd5-3a60-a9fc-d02432b6c3a7, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇵🇭 菲律宾 Edge', type: vmess, server: ph1.qiangdong.xyz, port: 153, uuid: cb3e79fe-cf2b-31ea-ada7-4c70d086187e, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇦🇷 阿根廷 Edge', type: vmess, server: ar1.qiangdong.xyz, port: 153, uuid: 551569da-0cbb-3e9a-9d64-593796f0b758, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇰🇷 韩国 Edge', type: vmess, server: kr1.qiangdong.xyz, port: 153, uuid: 8f0a00a1-a6ee-3d3e-96d2-685486858a9e, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 DMIT [01]', type: vmess, server: dmit_hk1.qiangdong.xyz, port: 153, uuid: f00c9fef-7d74-37aa-b5a7-6436826a610e, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 DMIT [02]', type: vmess, server: dmit_hk2.qiangdong.xyz, port: 153, uuid: cd93c530-a7fe-3f44-985d-5f0836f5e83b, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 DMIT [03]', type: vmess, server: dmit_hk3.qiangdong.xyz, port: 153, uuid: 08ba8d87-1377-345f-a181-57919ff5559a, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 DMIT [04]', type: vmess, server: dmit_hk4.qiangdong.xyz, port: 153, uuid: c56e75d0-a9b6-323a-8b44-b9cf09d96813, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 DMIT [05]', type: vmess, server: dmit_hk5.qiangdong.xyz, port: 153, uuid: cf592b0f-e007-368b-b2c3-83a28e811541, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 Edge [01]', type: vmess, server: hk1.qiangdong.xyz, port: 153, uuid: f830d4b3-2bec-31f9-8119-c09b7baa4815, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 Edge [02]', type: vmess, server: hk2.qiangdong.xyz, port: 153, uuid: 96df2746-ba30-35c8-806a-7f0c1a586d2d, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 Edge [03]', type: vmess, server: hk3.qiangdong.xyz, port: 153, uuid: a36e0a0f-337c-3b8a-92d2-96a7c0d5cb4b, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 Edge [04]', type: vmess, server: hk4.qiangdong.xyz, port: 153, uuid: 05c79247-c97b-3e80-be0d-1fb4f8112af5, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 HKT [01]', type: vmess, server: hkt1.qiangdong.xyz, port: 153, uuid: ea90c104-4d4c-325e-a41d-18b57e046cbe, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 HKT [02]', type: vmess, server: hkt2.qiangdong.xyz, port: 153, uuid: 207dbbe3-4ec5-392c-8135-78f9466144e5, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 HKT [03]', type: vmess, server: hkt3.qiangdong.xyz, port: 153, uuid: bec08504-426a-3de2-b6b2-d4a80c03bfc8, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 HKT [04]', type: vmess, server: hkt4.qiangdong.xyz, port: 153, uuid: a7674bbc-4725-3333-bd53-297326397bfb, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 HKT [05]', type: vmess, server: hkt5.qiangdong.xyz, port: 153, uuid: 7d75f2d6-4ed2-32cc-8a37-14558094a304, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 HKT [06]', type: vmess, server: hkt6.qiangdong.xyz, port: 153, uuid: c82c74d6-e754-3625-ac36-f1ce5002cfca, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 HKT [07]', type: vmess, server: hkt7.qiangdong.xyz, port: 153, uuid: e94bf184-4d0f-3c97-a64e-fe9ac78be247, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
+    - { name: '🇭🇰 香港 HKT [08]', type: vmess, server: hkt8.qiangdong.xyz, port: 153, uuid: 3be3be2c-26c8-3270-bfab-ba6592e1a7b4, alterId: 64, cipher: auto, udp: true, network: ws, ws-opts: { path: /api/v3/download.getFile, headers: { Host: 25240b0f07110d14d41f496741294a94169495.laowanxiang.com } } }
 proxy-groups:
-  # 代理链，目前relay可以支持udp的只有vmess/vless/trojan/ss/ssr/tuic
-  # wireguard目前不支持在relay中使用，请使用proxy中的dialer-proxy配置项
-  # Traffic: clash <-> http <-> vmess <-> ss1 <-> ss2 <-> Internet
-  - name: "relay"
-    type: relay
-    proxies:
-      - http
-      - vmess
-      - ss1
-      - ss2
-
-  # url-test 将按照 url 测试结果使用延迟最低节点
-  - name: "auto"
-    type: url-test
-    proxies:
-      - ss1
-      - ss2
-      - vmess1
-    # tolerance: 150
-    # lazy: true
-    url: "https://cp.cloudflare.com/generate_204"
-    interval: 300
-
-  # fallback 将按照 url 测试结果按照节点顺序选择
-  - name: "fallback-auto"
-    type: fallback
-    proxies:
-      - ss1
-      - ss2
-      - vmess1
-    url: "https://cp.cloudflare.com/generate_204"
-    interval: 300
-
-  # load-balance 将按照算法随机选择节点
-  - name: "load-balance"
-    type: load-balance
-    proxies:
-      - ss1
-      - ss2
-      - vmess1
-    url: "https://cp.cloudflare.com/generate_204"
-    interval: 300
-  # strategy: consistent-hashing # 可选 round-robin 和 sticky-sessions
-
-  # select 用户自行选择节点
-  - name: Proxy
-    type: select
-    # disable-udp: true
-    proxies:
-      - ss1
-      - ss2
-      - vmess1
-      - auto
-
-  # 配置指定 interface-name 和 fwmark 的 DIRECT
-  - name: en1
-    type: select
-    interface-name: en1
-    routing-mark: 6667
-    proxies:
-      - DIRECT
-
-  - name: UseProvider
-    type: select
-    filter: "HK|TW" # 正则表达式，过滤 provider1 中节点名包含 HK 或 TW
-    use:
-      - provider1
-    proxies:
-      - Proxy
-      - DIRECT
-
-# Clash 格式的节点或支持 *ray 的分享格式
-proxy-providers:
-  provider1:
-    type: http # http 的 path 可空置,默认储存路径为 homedir的proxies文件夹,文件名为url的md5
-    url: "url"
-    interval: 3600
-    path: ./provider1.yaml # 默认只允许存储在 clash 的 Home Dir，如果想存储到任意位置，添加环境变量 SKIP_SAFE_PATH_CHECK=1
-    health-check:
-      enable: true
-      interval: 600
-      # lazy: true
-      url: https://cp.cloudflare.com/generate_204
-  test:
-    type: file
-    path: /test.yaml
-    health-check:
-      enable: true
-      interval: 36000
-      url: https://cp.cloudflare.com/generate_204
-rule-providers:
-  rule1:
-    behavior: classical # domain ipcidr
-    interval: 259200
-    path: /path/to/save/file.yaml # 默认只允许存储在 clash 的 Home Dir，如果想存储到任意位置，添加环境变量 SKIP_SAFE_PATH_CHECK=1
-    type: http # http 的 path 可空置,默认储存路径为 homedir的rules文件夹,文件名为url的md5
-    url: "url"
-  rule2:
-    behavior: classical
-    interval: 259200
-    path: /path/to/save/file.yaml
-    type: file
+    - { name: Proxy, type: select, proxies: ['Auto - UrlTest', DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Domestic, type: select, proxies: [DIRECT, Proxy, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Others, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: AdBlock, type: select, proxies: [REJECT, DIRECT, Proxy] }
+    - { name: 'Anti IP', type: select, proxies: [DIRECT, Proxy, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Netflix, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Disney, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: YouTube, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Spotify, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: 'Asian TV', type: select, proxies: [DIRECT, Proxy, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: 'Global TV', type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Apple, type: select, proxies: [DIRECT, Proxy, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: 'Apple TV', type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Telegram, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: 'Google FCM', type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Crypto, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Discord, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Microsoft, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: OpenAI, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: PayPal, type: select, proxies: [DIRECT, Proxy, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Scholar, type: select, proxies: [DIRECT, Proxy, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Speedtest, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: Steam, type: select, proxies: [Proxy, DIRECT, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: miHoYo, type: select, proxies: [DIRECT, Proxy, '🇷🇺 俄罗斯 Edge', '🇨🇦 加拿大 Edge', '🇮🇳 印度 Edge', '🇨🇳 台湾 CHT [01]', '🇨🇳 台湾 CHT [02]', '🇨🇳 台湾 CHT [03]', '🇨🇳 台湾 Edge', '🇹🇷 土耳其 Edge', '🇧🇷 巴西 Edge', '🇩🇪 德国 Edge', '🇸🇬 新加坡 Edge [01]', '🇸🇬 新加坡 Edge [02]', '🇸🇬 新加坡 Edge [03]', '🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]', '🇯🇵 日本 Edge [01]', '🇯🇵 日本 Edge [02]', '🇯🇵 日本 Edge [03]', '🇫🇷 法国 Edge', '🇹🇭 泰国 Edge', '🇦🇺 澳大利亚 Edge', '🇺🇸 美国 DMIT [01]', '🇺🇸 美国 DMIT [02]', '🇺🇸 美国 Edge', '🇬🇧 英国 Edge [01]', '🇬🇧 英国 Edge [02]', '🇵🇭 菲律宾 Edge', '🇦🇷 阿根廷 Edge', '🇰🇷 韩国 Edge', '🇭🇰 香港 DMIT [01]', '🇭🇰 香港 DMIT [02]', '🇭🇰 香港 DMIT [03]', '🇭🇰 香港 DMIT [04]', '🇭🇰 香港 DMIT [05]', '🇭🇰 香港 Edge [01]', '🇭🇰 香港 Edge [02]', '🇭🇰 香港 Edge [03]', '🇭🇰 香港 Edge [04]', '🇭🇰 香港 HKT [01]', '🇭🇰 香港 HKT [02]', '🇭🇰 香港 HKT [03]', '🇭🇰 香港 HKT [04]', '🇭🇰 香港 HKT [05]', '🇭🇰 香港 HKT [06]', '🇭🇰 香港 HKT [07]', '🇭🇰 香港 HKT [08]'] }
+    - { name: 'Auto - UrlTest', type: url-test, proxies: ['🇯🇵 日本 BBTEC [01]', '🇯🇵 日本 BBTEC [02]'], url: 'http://cp.cloudflare.com/generate_204', interval: '3600' }
 rules:
-  - RULE-SET,rule1,REJECT
-  - DOMAIN-SUFFIX,baidu.com,DIRECT
-  - DOMAIN-KEYWORD,google,ss1
-  - IP-CIDR,1.1.1.1/32,ss1
-  - IP-CIDR6,2409::/64,DIRECT
-  # 当满足条件是 TCP 或 UDP 流量时，使用名为 sub-rule-name1 的规则集
-  - SUB-RULE,(OR,((NETWORK,TCP),(NETWORK,UDP))),sub-rule-name1
-  - SUB-RULE,(AND,((NETWORK,UDP))),sub-rule-name2
-# 定义多个子规则集，规则将以分叉匹配，使用 SUB-RULE 使用
-#                                               google.com(not match)--> baidu.com(match)
-#                                                /                                ｜
-#                                               /                                 ｜
-#  https://baidu.com  --> rule1 --> rule2 --> sub-rule-name1(match tcp)          使用 DIRECT
-#
-#
-#                                              google.com(not match)--> baidu.com(not match)
-#                                                /                            ｜
-#                                               /                             ｜
-#  dns 1.1.1.1  --> rule1 --> rule2 --> sub-rule-name1(match udp)         sub-rule-name2(match udp)
-#                                                                             ｜
-#                                                                             ｜
-#                                                                 使用 REJECT <-- 1.1.1.1/32(match)
-#
+    - 'RULE-SET, Reject, AdBlock'
+    - 'RULE-SET, Special, DIRECT'
+    - 'RULE-SET, Anti IP, Anti IP'
+    - 'RULE-SET, Netflix, Netflix'
+    - 'RULE-SET, Disney Plus, Disney'
+    - 'RULE-SET, YouTube, YouTube'
+    - 'RULE-SET, Spotify, Spotify'
+    - 'RULE-SET, Bilibili, Asian TV'
+    - 'RULE-SET, IQ, Asian TV'
+    - 'RULE-SET, IQIYI, Asian TV'
+    - 'RULE-SET, Letv, Asian TV'
+    - 'RULE-SET, Netease Music, Asian TV'
+    - 'RULE-SET, Tencent Video, Asian TV'
+    - 'RULE-SET, Youku, Asian TV'
+    - 'RULE-SET, WeTV, Asian TV'
+    - 'RULE-SET, ABC, Global TV'
+    - 'RULE-SET, Abema TV, Global TV'
+    - 'RULE-SET, Amazon, Global TV'
+    - 'RULE-SET, Bahamut, Global TV'
+    - 'RULE-SET, BBC iPlayer, Global TV'
+    - 'RULE-SET, DAZN, Global TV'
+    - 'RULE-SET, Discovery Plus, Global TV'
+    - 'RULE-SET, encoreTVB, Global TV'
+    - 'RULE-SET, F1 TV, Global TV'
+    - 'RULE-SET, Fox Now, Global TV'
+    - 'RULE-SET, Fox+, Global TV'
+    - 'RULE-SET, HBO Go, Global TV'
+    - 'RULE-SET, HBO Max, Global TV'
+    - 'RULE-SET, Hulu Japan, Global TV'
+    - 'RULE-SET, Hulu, Global TV'
+    - 'RULE-SET, Japonx, Global TV'
+    - 'RULE-SET, JOOX, Global TV'
+    - 'RULE-SET, KKBOX, Global TV'
+    - 'RULE-SET, KKTV, Global TV'
+    - 'RULE-SET, Line TV, Global TV'
+    - 'RULE-SET, myTV SUPER, Global TV'
+    - 'RULE-SET, Niconico, Global TV'
+    - 'RULE-SET, Pandora, Global TV'
+    - 'RULE-SET, PBS, Global TV'
+    - 'RULE-SET, Pornhub, Global TV'
+    - 'RULE-SET, Soundcloud, Global TV'
+    - 'RULE-SET, ViuTV, Global TV'
+    - 'RULE-SET, Apple Music, Apple TV'
+    - 'RULE-SET, Apple News, Apple TV'
+    - 'RULE-SET, Apple TV, Apple TV'
+    - 'RULE-SET, Apple, Apple'
+    - 'RULE-SET, Telegram, Telegram'
+    - 'RULE-SET, Crypto, Crypto'
+    - 'RULE-SET, Discord, Discord'
+    - 'RULE-SET, Google FCM, Google FCM'
+    - 'RULE-SET, Microsoft, Microsoft'
+    - 'RULE-SET, OpenAI, OpenAI'
+    - 'RULE-SET, PayPal, PayPal'
+    - 'RULE-SET, Scholar, Scholar'
+    - 'RULE-SET, Speedtest, Speedtest'
+    - 'RULE-SET, Steam, Steam'
+    - 'RULE-SET, miHoYo, miHoYo'
+    - 'RULE-SET, PROXY, Proxy'
+    - 'RULE-SET, Domestic, Domestic'
+    - 'RULE-SET, Domestic IPs, Domestic'
+    - 'RULE-SET, LAN, DIRECT'
+    - 'GEOIP, CN, Domestic'
+    - 'MATCH, Others'
+script:
+    code: "def main(ctx, metadata):\n    ruleset_action = {\n        'Reject': 'AdBlock',\n        'Special': 'DIRECT',\n        'Anti IP': 'Anti IP',\n        'Netflix': 'Netflix',\n        'Disney Plus': 'Disney',\n        'YouTube': 'YouTube',\n        'Spotify': 'Spotify',\n        'Bilibili': 'Asian TV',\n        'IQ': 'Asian TV',\n        'IQIYI': 'Asian TV',\n        'Letv': 'Asian TV',\n        'Netease Music': 'Asian TV',\n        'Tencent Video': 'Asian TV',\n        'Youku': 'Asian TV',\n        'WeTV': 'Asian TV',\n        'ABC': 'Global TV',\n        'Abema TV': 'Global TV',\n        'Amazon': 'Global TV',\n        'Bahamut': 'Global TV',\n        'BBC iPlayer': 'Global TV',\n        'DAZN': 'Global TV',\n        'Discovery Plus': 'Global TV',\n        'encoreTVB': 'Global TV',\n        'F1 TV': 'Global TV',\n        'Fox Now': 'Global TV',\n        'Fox+': 'Global TV',\n        'HBO Go': 'Global TV',\n        'HBO Max': 'Global TV',\n        'Hulu Japan': 'Global TV',\n        'Hulu': 'Global TV',\n        'Japonx': 'Global TV',\n        'JOOX': 'Global TV',\n        'KKBOX': 'Global TV',\n        'KKTV': 'Global TV',\n        'Line TV': 'Global TV',\n        'myTV SUPER': 'Global TV',\n        'Niconico': 'Global TV',\n        'Pandora': 'Global TV',\n        'PBS': 'Global TV',\n        'Pornhub': 'Global TV',\n        'Soundcloud': 'Global TV',\n        'ViuTV': 'Global TV',\n        'Apple Music': 'Apple TV',\n        'Apple News': 'Apple TV',\n        'Apple TV': 'Apple TV',\n        'Apple': 'Apple',\n        'Telegram': 'Telegram',\n        'Crypto': 'Crypto',\n        'Discord': 'Discord',\n        'Google FCM': 'Google FCM',\n        'Microsoft': 'Microsoft',\n        'OpenAI': 'OpenAI',\n        'PayPal': 'PayPal',\n        'Scholar': 'Scholar',\n        'Speedtest': 'Speedtest',\n        'Steam': 'Steam',\n        'miHoYo': 'miHoYo',\n        'PROXY': 'Proxy',\n        'Domestic': 'Domestic',\n        'Domestic IPs': 'Domestic',\n        'LAN': 'DIRECT'\n      }\n\n    port = int(metadata['dst_port'])\n\n    if metadata['network'] == 'UDP' and port == 443:\n        ctx.log('[Script] matched QUIC traffic use reject')\n        return 'REJECT'\n\n    port_list = [21, 22, 23, 53, 80, 123, 143, 194, 443, 465, 587, 853, 993, 995, 998, 2052, 2053, 2082, 2083, 2086, 2095, 2096, 3389, 5222, 5228, 5229, 5230, 8080, 8443, 8880, 8888, 8889]\n    if port not in port_list:\n        ctx.log('[Script] not common port use direct')\n        return 'DIRECT'\n\n    if metadata['dst_ip'] == '':\n        metadata['dst_ip'] = ctx.resolve_ip(metadata['host'])\n\n    for ruleset in ruleset_action:\n        if ctx.rule_providers[ruleset].match(metadata):\n            return ruleset_action[ruleset]\n\n    if metadata['dst_ip'] != '':\n        code = ctx.geoip(metadata['dst_ip'])\n        if code == 'CN':\n            ctx.log('[Script] Geoip CN')\n            return 'Domestic'\n\n    ctx.log('[Script] FINAL')\n    return 'Others'\n"
+rule-providers:
+    Reject: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Reject.yaml', path: ./Rules/Reject, interval: 86400 }
+    Special: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Special.yaml', path: ./Rules/Special, interval: 86400 }
+    PROXY: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Proxy.yaml', path: ./Rules/Proxy, interval: 86400 }
+    Domestic: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Domestic.yaml', path: ./Rules/Domestic, interval: 86400 }
+    'Domestic IPs': { type: http, behavior: ipcidr, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Domestic%20IPs.yaml', path: ./Rules/Domestic_IPs, interval: 86400 }
+    LAN: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/LAN.yaml', path: ./Rules/LAN, interval: 86400 }
+    'Anti IP': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Anti.yaml', path: ./Rules/Anti_IP, interval: 86400 }
+    Netflix: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Netflix.yaml', path: ./Rules/Media/Netflix, interval: 86400 }
+    Spotify: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Spotify.yaml', path: ./Rules/Media/Spotify, interval: 86400 }
+    YouTube: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/YouTube.yaml', path: ./Rules/Media/YouTube, interval: 86400 }
+    Bilibili: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Bilibili.yaml', path: ./Rules/Media/Bilibili, interval: 86400 }
+    IQ: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/IQ.yaml', path: ./Rules/Media/IQI, interval: 86400 }
+    IQIYI: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/IQIYI.yaml', path: ./Rules/Media/IQYI, interval: 86400 }
+    Letv: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Letv.yaml', path: ./Rules/Media/Letv, interval: 86400 }
+    'Netease Music': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Netease%20Music.yaml', path: ./Rules/Media/Netease_Music, interval: 86400 }
+    'Tencent Video': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Tencent%20Video.yaml', path: ./Rules/Media/Tencent_Video, interval: 86400 }
+    Youku: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Youku.yaml', path: ./Rules/Media/Youku, interval: 86400 }
+    WeTV: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/WeTV.yaml', path: ./Rules/Media/WeTV, interval: 86400 }
+    ABC: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/ABC.yaml', path: ./Rules/Media/ABC, interval: 86400 }
+    'Abema TV': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Abema%20TV.yaml', path: ./Rules/Media/Abema_TV, interval: 86400 }
+    Amazon: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Amazon.yaml', path: ./Rules/Media/Amazon, interval: 86400 }
+    'Apple Music': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Apple%20Music.yaml', path: ./Rules/Media/Apple_Music, interval: 86400 }
+    'Apple News': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Apple%20News.yaml', path: ./Rules/Media/Apple_News, interval: 86400 }
+    'Apple TV': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Apple%20TV.yaml', path: ./Rules/Media/Apple_TV, interval: 86400 }
+    Bahamut: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Bahamut.yaml', path: ./Rules/Media/Bahamut, interval: 86400 }
+    'BBC iPlayer': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/BBC%20iPlayer.yaml', path: ./Rules/Media/BBC_iPlayer, interval: 86400 }
+    DAZN: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/DAZN.yaml', path: ./Rules/Media/DAZN, interval: 86400 }
+    'Discovery Plus': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Discovery%20Plus.yaml', path: ./Rules/Media/Discovery_Plus, interval: 86400 }
+    'Disney Plus': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Disney%20Plus.yaml', path: ./Rules/Media/Disney_Plus, interval: 86400 }
+    encoreTVB: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/encoreTVB.yaml', path: ./Rules/Media/encoreTVB, interval: 86400 }
+    'F1 TV': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/F1%20TV.yaml', path: ./Rules/Media/F1_TV, interval: 86400 }
+    'Fox Now': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Fox%20Now.yaml', path: ./Rules/Media/Fox_Now, interval: 86400 }
+    Fox+: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Fox%2B.yaml', path: ./Rules/Media/Fox+, interval: 86400 }
+    'HBO Go': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/HBO%20Go.yaml', path: ./Rules/Media/HBO_Go, interval: 86400 }
+    'HBO Max': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/HBO%20Max.yaml', path: ./Rules/Media/HBO_Max, interval: 86400 }
+    'Hulu Japan': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Hulu%20Japan.yaml', path: ./Rules/Media/Hulu_Japan, interval: 86400 }
+    Hulu: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Hulu.yaml', path: ./Rules/Media/Hulu, interval: 86400 }
+    Japonx: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Japonx.yaml', path: ./Rules/Media/Japonx, interval: 86400 }
+    JOOX: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/JOOX.yaml', path: ./Rules/Media/JOOX, interval: 86400 }
+    KKBOX: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/KKBOX.yaml', path: ./Rules/Media/KKBOX, interval: 86400 }
+    KKTV: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/KKTV.yaml', path: ./Rules/Media/KKTV, interval: 86400 }
+    'Line TV': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Line%20TV.yaml', path: ./Rules/Media/Line_TV, interval: 86400 }
+    'myTV SUPER': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/myTV%20SUPER.yaml', path: ./Rules/Media/myTV_SUPER, interval: 86400 }
+    Niconico: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Niconico.yaml', path: ./Rules/Media/Niconico, interval: 86400 }
+    Pandora: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Pandora.yaml', path: ./Rules/Media/Pandora, interval: 86400 }
+    PBS: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/PBS.yaml', path: ./Rules/Media/PBS, interval: 86400 }
+    Pornhub: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Pornhub.yaml', path: ./Rules/Media/Pornhub, interval: 86400 }
+    Soundcloud: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/Soundcloud.yaml', path: ./Rules/Media/Soundcloud, interval: 86400 }
+    ViuTV: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Media/ViuTV.yaml', path: ./Rules/Media/ViuTV, interval: 86400 }
+    Telegram: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Telegram.yaml', path: ./Rules/Telegram, interval: 86400 }
+    Crypto: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Crypto.yaml', path: ./Rules/Crypto, interval: 86400 }
+    Discord: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Discord.yaml', path: ./Rules/Discord, interval: 86400 }
+    Steam: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Steam.yaml', path: ./Rules/Steam, interval: 86400 }
+    Speedtest: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Speedtest.yaml', path: ./Rules/Speedtest, interval: 86400 }
+    PayPal: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/PayPal.yaml', path: ./Rules/PayPal, interval: 86400 }
+    Microsoft: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Microsoft.yaml', path: ./Rules/Microsoft, interval: 86400 }
+    OpenAI: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/OpenAI.yaml', path: ./Rules/OpenAI, interval: 86400 }
+    Apple: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Apple.yaml', path: ./Rules/Apple, interval: 86400 }
+    'Google FCM': { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Google%20FCM.yaml', path: './Rules/Google FCM', interval: 86400 }
+    Scholar: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/Scholar.yaml', path: ./Rules/Scholar, interval: 86400 }
+    miHoYo: { type: http, behavior: classical, url: 'https://1a135efb-1e6c-4e3c-9d3d-a331bf6a6ee3.oss-cn-hangzhou.aliyuncs.com/Provider/miHoYo.yaml', path: ./Rules/miHoYo, interval: 86400 }
 
-sub-rules:
-  sub-rule-name1:
-    - DOMAIN,google.com,ss1
-    - DOMAIN,baidu.com,DIRECT
-  sub-rule-name2:
-    - IP-CIDR,1.1.1.1/32,REJECT
-    - IP-CIDR,8.8.8.8/32,ss1
-    - DOMAIN,dns.alidns.com,REJECT
-
-# 流量入站
-listeners:
-  - name: socks5-in-1
-    type: socks
-    port: 10808
-    #listen: 0.0.0.0 # 默认监听 0.0.0.0
-    # rule: sub-rule-name1 # 默认使用 rules，如果未找到 sub-rule 则直接使用 rules
-    # proxy: proxy # 如果不为空则直接将该入站流量交由指定proxy处理
-    # udp: false # 默认 true
-
-  - name: http-in-1
-    type: http
-    port: 10809
-    listen: 0.0.0.0
-    # rule: sub-rule-name1 # 默认使用 rules，如果未找到 sub-rule 则直接使用 rules
-    # proxy: proxy # 如果不为空则直接将该入站流量交由指定proxy处理(当proxy不为空时，这里的proxy名称必须合法，否则会出错)
-
-  - name: mixed-in-1
-    type: mixed #  HTTP(S) 和 SOCKS 代理混合
-    port: 10810
-    listen: 0.0.0.0
-    # rule: sub-rule-name1 # 默认使用 rules，如果未找到 sub-rule 则直接使用 rules
-    # proxy: proxy # 如果不为空则直接将该入站流量交由指定proxy处理(当proxy不为空时，这里的proxy名称必须合法，否则会出错)
-    # udp: false # 默认 true
-
-  - name: reidr-in-1
-    type: redir
-    port: 10811
-    listen: 0.0.0.0
-    # rule: sub-rule-name1 # 默认使用 rules，如果未找到 sub-rule 则直接使用 rules
-    # proxy: proxy # 如果不为空则直接将该入站流量交由指定proxy处理(当proxy不为空时，这里的proxy名称必须合法，否则会出错)
-
-  - name: tproxy-in-1
-    type: tproxy
-    port: 10812
-    listen: 0.0.0.0
-    # rule: sub-rule-name1 # 默认使用 rules，如果未找到 sub-rule 则直接使用 rules
-    # proxy: proxy # 如果不为空则直接将该入站流量交由指定proxy处理(当proxy不为空时，这里的proxy名称必须合法，否则会出错)
-    # udp: false # 默认 true
-
-  - name: shadowsocks-in-1
-    type: shadowsocks
-    port: 10813
-    listen: 0.0.0.0
-    # rule: sub-rule-name1 # 默认使用 rules，如果未找到 sub-rule 则直接使用 rules
-    # proxy: proxy # 如果不为空则直接将该入站流量交由指定proxy处理(当proxy不为空时，这里的proxy名称必须合法，否则会出错)
-    password: vlmpIPSyHH6f4S8WVPdRIHIlzmB+GIRfoH3aNJ/t9Gg=
-    cipher: 2022-blake3-aes-256-gcm
-
-  - name: vmess-in-1
-    type: vmess
-    port: 10814
-    listen: 0.0.0.0
-    # rule: sub-rule-name1 # 默认使用 rules，如果未找到 sub-rule 则直接使用 rules
-    # proxy: proxy # 如果不为空则直接将该入站流量交由指定proxy处理(当proxy不为空时，这里的proxy名称必须合法，否则会出错)
-    users:
-      - username: 1
-        uuid: 9d0cb9d0-964f-4ef6-897d-6c6b3ccf9e68
-        alterId: 1
-    # ws-path: "/" # 如果不为空则开启websocket传输层
-    # 下面两项如果填写则开启tls（需要同时填写）
-    # certificate: ./server.crt
-    # private-key: ./server.key
-
-  - name: tuic-in-1
-    type: tuic
-    port: 10815
-    listen: 0.0.0.0
-    # rule: sub-rule-name1 # 默认使用 rules，如果未找到 sub-rule 则直接使用 rules
-    # proxy: proxy # 如果不为空则直接将该入站流量交由指定proxy处理(当proxy不为空时，这里的proxy名称必须合法，否则会出错)
-    # token:    # tuicV4填写（可以同时填写users）
-    #   - TOKEN
-    # users:    # tuicV5填写（可以同时填写token）
-    #   00000000-0000-0000-0000-000000000000: PASSWORD_0
-    #   00000000-0000-0000-0000-000000000001: PASSWORD_1
-    #  certificate: ./server.crt
-    #  private-key: ./server.key
-    #  congestion-controller: bbr
-    #  max-idle-time: 15000
-    #  authentication-timeout: 1000
-    #  alpn:
-    #    - h3
-    #  max-udp-relay-packet-size: 1500
-
-  - name: tunnel-in-1
-    type: tunnel
-    port: 10816
-    listen: 0.0.0.0
-    # rule: sub-rule-name1 # 默认使用 rules，如果未找到 sub-rule 则直接使用 rules
-    # proxy: proxy # 如果不为空则直接将该入站流量交由指定proxy处理(当proxy不为空时，这里的proxy名称必须合法，否则会出错)
-    network: [tcp, udp]
-    target: target.com
-
-  - name: tun-in-1
-    type: tun
-    # rule: sub-rule-name1 # 默认使用 rules，如果未找到 sub-rule 则直接使用 rules
-    # proxy: proxy # 如果不为空则直接将该入站流量交由指定proxy处理(当proxy不为空时，这里的proxy名称必须合法，否则会出错)
-    stack: system # gvisor / lwip
-    dns-hijack:
-      - 0.0.0.0:53 # 需要劫持的 DNS
-    # auto-detect-interface: false # 自动识别出口网卡
-    # auto-route: false # 配置路由表
-    # mtu: 9000 # 最大传输单元
-    inet4-address: # 必须手动设置ipv4地址段
-      - 198.19.0.1/30
-    inet6-address: # 必须手动设置ipv6地址段
-      - "fdfe:dcba:9877::1/126"
-    # strict_route: true # 将所有连接路由到tun来防止泄漏，但你的设备将无法其他设备被访问
-    #   inet4_route_address: # 启用 auto_route 时使用自定义路由而不是默认路由
-    #     - 0.0.0.0/1
-    #     - 128.0.0.0/1
-    #   inet6_route_address: # 启用 auto_route 时使用自定义路由而不是默认路由
-    #     - "::/1"
-    #     - "8000::/1"
-    # endpoint_independent_nat: false # 启用独立于端点的 NAT
-    # include_uid: # UID 规则仅在 Linux 下被支持，并且需要 auto_route
-    # - 0
-    # include_uid_range: # 限制被路由的的用户范围
-    # - 1000-99999
-    # exclude_uid: # 排除路由的的用户
-    # - 1000
-    # exclude_uid_range: # 排除路由的的用户范围
-    # - 1000-99999
-
-    # Android 用户和应用规则仅在 Android 下被支持
-    # 并且需要 auto_route
-
-    # include_android_user: # 限制被路由的 Android 用户
-    # - 0
-    # - 10
-    # include_package: # 限制被路由的 Android 应用包名
-    # - com.android.chrome
-    # exclude_package: # 排除被路由的 Android 应用包名
-    # - com.android.captiveportallogin
-# 入口配置与 Listener 等价，传入流量将和 socks,mixed 等入口一样按照 mode 所指定的方式进行匹配处理
-# shadowsocks,vmess 入口配置（传入流量将和socks,mixed等入口一样按照mode所指定的方式进行匹配处理）
-# ss-config: ss://2022-blake3-aes-256-gcm:vlmpIPSyHH6f4S8WVPdRIHIlzmB+GIRfoH3aNJ/t9Gg=@:23456
-# vmess-config: vmess://1:9d0cb9d0-964f-4ef6-897d-6c6b3ccf9e68@:12345
-
-# tuic服务器入口（传入流量将和socks,mixed等入口一样按照mode所指定的方式进行匹配处理）
-# tuic-server:
-#  enable: true
-#  listen: 127.0.0.1:10443
-#  token:    # tuicV4填写（可以同时填写users）
-#    - TOKEN
-#  users:    # tuicV5填写（可以同时填写token）
-#    00000000-0000-0000-0000-000000000000: PASSWORD_0
-#    00000000-0000-0000-0000-000000000001: PASSWORD_1
-#  certificate: ./server.crt
-#  private-key: ./server.key
-#  congestion-controller: bbr
-#  max-idle-time: 15000
-#  authentication-timeout: 1000
-#  alpn:
-#    - h3
-#  max-udp-relay-packet-size: 1500
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  nameserver:
+    - 114.114.114.114
+    - 223.5.5.5
+    - 8.8.8.8
+  fallback: []
+  nameserver-policy: {}
+  fake-ip-filter:
+    - +.stun.*.*
+    - +.stun.*.*.*
+    - +.stun.*.*.*.*
+    - +.stun.*.*.*.*.*
+    - "*.n.n.srv.nintendo.net"
+    - +.stun.playstation.net
+    - xbox.*.*.microsoft.com
+    - "*.*.xboxlive.com"
+    - "*.msftncsi.com"
+    - "*.msftconnecttest.com"
+    - WORKGROUP
+tun:
+  enable: true
+  stack: gvisor
+  auto-route: true
+  auto-detect-interface: true
+  dns-hijack:
+    - any:53
