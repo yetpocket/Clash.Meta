@@ -309,10 +309,13 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 		return nil, "-1", err
 	}
 	server := ""
-	// why nil panic?
-	// if preferResolver != nil {
-	// 	server = preferResolver.Addr()
-	// }
+	// preferResolver != nil 只是检查接口不是nil
+	// 但里面的值可能是nil
+	// https://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
+	// https://go.dev/play/p/Isoo0CcAvr
+	if preferResolver != nil {
+		server = preferResolver.Addr()
+	}
 	log.Debugln("trying resolve network %s address %s. dns server %s", network, address, server)
 	var ips []netip.Addr
 	switch network {

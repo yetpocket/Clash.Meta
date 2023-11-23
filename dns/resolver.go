@@ -63,12 +63,10 @@ type Resolver struct {
 
 func (r *Resolver) Addr() string {
 	addrs := []string{}
-	if r == nil || r.main == nil {
-		log.Debugln("main is null!")
-		return ""
-	}
-	for _, client := range r.main {
-		addrs = append(addrs, client.Address())
+	if r != nil {
+		for _, client := range r.main {
+			addrs = append(addrs, client.Address())
+		}
 	}
 	list := strings.Join(addrs, ",")
 	return fmt.Sprintf("[%s]", list)
