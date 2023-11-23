@@ -16,10 +16,10 @@ for FILENAME in $FILENAMES
 do
     if [[ $FILENAME =~ ".zip" ]];then
         echo "rename $FILENAME"
-        mv $FILENAME ${FILENAME%.*}-${VERSION}.zip
+        mv $FILENAME ${FILENAME%.*}}.zip
     elif [[ $FILENAME =~ ".gz" ]];then
         echo "rename $FILENAME"
-        mv $FILENAME ${FILENAME%.*}-${VERSION}.gz
+        mv $FILENAME ${FILENAME%.*}.gz
     else
         echo "skip $FILENAME"
     fi
