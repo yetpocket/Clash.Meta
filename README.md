@@ -13,6 +13,10 @@ go mod vendor
 modvendor -copy="**/*.c **/*.h **/*.proto **/*.dll" -v
 ```
 
+```
+sudo dlv debug --listen=:2345 --headless=true -- -d testconfig
+```
+
 ## Configration example
 
 Configuration example is located at [/docs/config.yaml](https://github.com/MetaCubeX/Clash.Meta/blob/Alpha/docs/config.yaml).
@@ -45,6 +49,7 @@ Build with gvisor tun stack:
 ```shell
 go build -tags with_gvisor
 ```
+
 
 ### IPTABLES configuration
 
