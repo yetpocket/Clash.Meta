@@ -145,7 +145,7 @@ jobs:
           BINDIR: bin
         run: make -j$(($(nproc) + 1)) ${{ matrix.job.target }}
 
-      - uses: nttld/setup-ndk@v1
+      - uses: nttld/setup-ndk@v1.4.2
         if: ${{ matrix.job.type=='WithCGO' && matrix.job.target=='android' }}
         id: setup-ndk
         with:
