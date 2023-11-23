@@ -1,43 +1,17 @@
 
+## build
 ```
 go build -mod vendor
+
 ```
+## vendor
 
-<h1 align="center">
-  <img src="Meta.png" alt="Meta Kennel" width="200">
-  <br>Meta Kernel<br>
-</h1>
-
-<h3 align="center">Another Clash Kernel.</h3>
-
-<p align="center">
-  <a href="https://goreportcard.com/report/github.com/Clash-Mini/Clash.Meta">
-    <img src="https://goreportcard.com/badge/github.com/Clash-Mini/Clash.Meta?style=flat-square">
-  </a>
-  <img src="https://img.shields.io/github/go-mod/go-version/Dreamacro/clash?style=flat-square">
-  <a href="https://github.com/Clash-Mini/Clash.Meta/releases">
-    <img src="https://img.shields.io/github/release/Clash-Mini/Clash.Meta/all.svg?style=flat-square">
-  </a>
-  <a href="https://github.com/Clash-Mini/Clash.Meta">
-    <img src="https://img.shields.io/badge/release-Meta-00b4f0?style=flat-square">
-  </a>
-</p>
-
-## Features
-
-- Local HTTP/HTTPS/SOCKS server with authentication support
-- VMess, VLESS, Shadowsocks, Trojan, Snell, TUIC, Hysteria protocol support
-- Built-in DNS server that aims to minimize DNS pollution attack impact, supports DoH/DoT upstream and fake IP.
-- Rules based off domains, GEOIP, IPCIDR or Process to forward packets to different nodes
-- Remote groups allow users to implement powerful rules. Supports automatic fallback, load balancing or auto select node
-  based off latency
-- Remote providers, allowing users to get node lists remotely instead of hard-coding in config
-- Netfilter TCP redirecting. Deploy Clash on your Internet gateway with `iptables`.
-- Comprehensive HTTP RESTful API controller
-
-## Dashboard
-
-A web dashboard with first-class support for this project has been created; it can be checked out at [metacubexd](https://github.com/MetaCubeX/metacubexd).
+```bash
+go install github.com/goware/modvendor@latest
+# vendor不会保留c, dll
+go mod vendor
+modvendor -copy="**/*.c **/*.h **/*.proto **/*.dll" -v
+```
 
 ## Configration example
 
@@ -84,11 +58,6 @@ iptables:
   enable: true # default is false
   inbound-interface: eth0 # detect the inbound interface, default is 'lo'
 ```
-
-## Debugging
-
-Check [wiki](https://wiki.metacubex.one/api/#debug) to get an instruction on using debug
-API.
 
 ## Credits
 
