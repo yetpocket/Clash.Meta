@@ -309,6 +309,7 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 		return nil, "-1", err
 	}
 	server := ""
+	// why nil panic?
 	// if preferResolver != nil {
 	// 	server = preferResolver.Addr()
 	// }

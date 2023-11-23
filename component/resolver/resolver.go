@@ -41,7 +41,7 @@ var (
 )
 
 type Resolver interface {
-	LookupIP(ctx context.Context, host string) (ips []netip.Addr, err error)
+	LookupDualStackIP(ctx context.Context, host string) (ips []netip.Addr, err error)
 	LookupIPv4(ctx context.Context, host string) (ips []netip.Addr, err error)
 	LookupIPv6(ctx context.Context, host string) (ips []netip.Addr, err error)
 	ExchangeContext(ctx context.Context, m *dns.Msg) (msg *dns.Msg, err error)
@@ -168,7 +168,7 @@ func LookupIPWithResolver(ctx context.Context, host string, r Resolver) ([]netip
 		if DisableIPv6 {
 			return r.LookupIPv4(ctx, host)
 		}
-		return r.LookupIP(ctx, host)
+		return r.LookupDualStackIP(ctx, host)
 	} else if DisableIPv6 {
 		return LookupIPv4WithResolver(ctx, host, r)
 	}

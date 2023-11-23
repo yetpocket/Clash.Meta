@@ -63,8 +63,9 @@ type Resolver struct {
 
 func (r *Resolver) Addr() string {
 	addrs := []string{}
-	if r == nil {
+	if r == nil || r.main == nil {
 		log.Debugln("main is null!")
+		return ""
 	}
 	for _, client := range r.main {
 		addrs = append(addrs, client.Address())
@@ -97,7 +98,7 @@ func (r *Resolver) LookupIPPrimaryIPv4(ctx context.Context, host string) (ips []
 	return ip, nil
 }
 
-func (r *Resolver) LookupIP(ctx context.Context, host string) (ips []netip.Addr, err error) {
+func (r *Resolver) LookupDualStackIP(ctx context.Context, host string) (ips []netip.Addr, err error) {
 	ch := make(chan []netip.Addr, 1)
 	go func() {
 		defer close(ch)
