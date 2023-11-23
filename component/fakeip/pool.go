@@ -9,6 +9,7 @@ import (
 	"github.com/Dreamacro/clash/common/nnip"
 	"github.com/Dreamacro/clash/component/profile/cachefile"
 	"github.com/Dreamacro/clash/component/trie"
+	"github.com/Dreamacro/clash/log"
 )
 
 const (
@@ -47,12 +48,16 @@ func (p *Pool) Lookup(host string) netip.Addr {
 
 	// RFC4343: DNS Case Insensitive, we SHOULD return result with all cases.
 	host = strings.ToLower(host)
-	if ip, exist := p.store.GetByHost(host); exist {
-		return ip
+	ip := netip.Addr{}
+	if _ip, exist := p.store.GetByHost(host); exist {
+		ip = _ip
+		goto out
 	}
 
-	ip := p.get(host)
+	ip = p.get(host)
 	p.store.PutByHost(host, ip)
+out:
+	log.Debugln("lookup get fake ip mapping host [%s] to [%s]", host, ip.AsSlice())
 	return ip
 }
 

@@ -308,7 +308,11 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 	if err != nil {
 		return nil, "-1", err
 	}
-	log.Debugln("trying resolve network %s address %s ", network, address)
+	server := ""
+	// if preferResolver != nil {
+	// 	server = preferResolver.Addr()
+	// }
+	log.Debugln("trying resolve network %s address %s. dns server %s", network, address, server)
 	var ips []netip.Addr
 	switch network {
 	case "tcp4", "udp4":
@@ -325,10 +329,10 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 		}
 	default:
 		if preferResolver == nil {
-			log.Debugln("lookup address [%s] by proxy", address)
+			log.Debugln("lookup proxy server [%s] ip address", address)
 			ips, err = resolver.LookupIPProxyServerHost(ctx, host)
 		} else {
-			log.Debugln("lookup address [%s] by prefer resolver", address)
+			log.Debugln("lookup proxy server [%s] by resolver", address)
 			ips, err = resolver.LookupIPWithResolver(ctx, host, preferResolver)
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/Dreamacro/clash/common/cache"
 	"github.com/Dreamacro/clash/component/fakeip"
 	C "github.com/Dreamacro/clash/constant"
+	"github.com/Dreamacro/clash/log"
 )
 
 type ResolverEnhancer struct {
@@ -75,6 +76,7 @@ func (h *ResolverEnhancer) FindHostByIP(ip netip.Addr) (string, bool) {
 }
 
 func (h *ResolverEnhancer) InsertHostByIP(ip netip.Addr, host string) {
+	log.Debugln("create fakeip mapping %s to %s", host, ip.AsSlice())
 	if mapping := h.mapping; mapping != nil {
 		h.mapping.Set(ip, host)
 	}

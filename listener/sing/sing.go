@@ -81,6 +81,8 @@ func (h *ListenerHandler) ParseSpecialFqdn(ctx context.Context, conn net.Conn, m
 }
 
 func (h *ListenerHandler) NewConnection(ctx context.Context, conn net.Conn, metadata M.Metadata) error {
+	log.Debugln("[TUN] receive tcp conn from peer [%s] => local [%s], real dest [%s] by protocol [%s]",
+		conn.RemoteAddr(), conn.LocalAddr(), metadata.Destination.AddrString(), metadata.Protocol)
 	if h.IsSpecialFqdn(metadata.Destination.Fqdn) {
 		return h.ParseSpecialFqdn(ctx, conn, metadata)
 	}
@@ -102,6 +104,8 @@ func (h *ListenerHandler) NewConnection(ctx context.Context, conn net.Conn, meta
 }
 
 func (h *ListenerHandler) NewPacketConnection(ctx context.Context, conn network.PacketConn, metadata M.Metadata) error {
+	log.Debugln("[TUN] receive udp packaet from peer [unknown] => local [%s], real dest [%s] by protocol [%s]",
+		conn.LocalAddr(), metadata.Destination.AddrString(), metadata.Protocol)
 	if deadline.NeedAdditionalReadDeadline(conn) {
 		conn = deadline.NewFallbackPacketConn(bufio.NewNetPacketConn(conn)) // conn from sing should check NeedAdditionalReadDeadline
 	}

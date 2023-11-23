@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/netip"
 	"strings"
 	"time"
@@ -58,6 +59,18 @@ type Resolver struct {
 	domainSetPolicy       []domainSetPolicyRecord
 	geositePolicy         []geositePolicyRecord
 	proxyServer           []dnsClient
+}
+
+func (r *Resolver) Addr() string {
+	addrs := []string{}
+	if r == nil {
+		log.Debugln("main is null!")
+	}
+	for _, client := range r.main {
+		addrs = append(addrs, client.Address())
+	}
+	list := strings.Join(addrs, ",")
+	return fmt.Sprintf("[%s]", list)
 }
 
 func (r *Resolver) LookupIPPrimaryIPv4(ctx context.Context, host string) (ips []netip.Addr, err error) {

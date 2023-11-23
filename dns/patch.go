@@ -16,5 +16,6 @@ func (s *LocalServer) ServeMsg(ctx context.Context, msg *D.Msg) (*D.Msg, error) 
 }
 
 func NewLocalServer(resolver *Resolver, mapper *ResolverEnhancer) *LocalServer {
+	// 
 	return &LocalServer{handler: NewHandler(resolver, mapper)}
 }
