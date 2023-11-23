@@ -69,7 +69,7 @@ func (r *Resolver) Addr() string {
 		}
 	}
 	list := strings.Join(addrs, ",")
-	return fmt.Sprintf("[%s]", list)
+	return list
 }
 
 func (r *Resolver) LookupIPPrimaryIPv4(ctx context.Context, host string) (ips []netip.Addr, err error) {

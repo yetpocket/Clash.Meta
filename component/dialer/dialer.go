@@ -316,7 +316,7 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 	if preferResolver != nil {
 		server = preferResolver.Addr()
 	}
-	log.Debugln("trying resolve network %s address %s. dns server %s", network, address, server)
+	log.Debugln("resolving %s://%s through dns servers [%s]", network, address, server)
 	var ips []netip.Addr
 	switch network {
 	case "tcp4", "udp4":
