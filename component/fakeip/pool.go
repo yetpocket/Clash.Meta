@@ -57,7 +57,7 @@ func (p *Pool) Lookup(host string) netip.Addr {
 	ip = p.get(host)
 	p.store.PutByHost(host, ip)
 out:
-	log.Debugln("lookup get fake ip mapping host [%s] to [%s]", host, ip.AsSlice())
+	log.Debugln("lookup get fake ip mapping host [%s] to fakeip [%s]", host, ip.String())
 	return ip
 }
 
@@ -65,8 +65,9 @@ out:
 func (p *Pool) LookBack(ip netip.Addr) (string, bool) {
 	p.mux.Lock()
 	defer p.mux.Unlock()
-
-	return p.store.GetByIP(ip)
+	ip_str, y := p.store.GetByIP(ip)
+	log.Debugln("lookup get fake ip mapping fakeip [%s] to host [%s]", ip.String(), ip_str)
+	return ip_str, y
 }
 
 // ShouldSkipped return if domain should be skipped

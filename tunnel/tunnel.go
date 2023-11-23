@@ -252,6 +252,7 @@ func preHandleMetadata(metadata *C.Metadata) error {
 
 	// preprocess enhanced-mode metadata
 	if needLookupIP(metadata) {
+		// host不一定是fakeip，也可能是real ip
 		host, exist := resolver.FindHostByIP(metadata.DstIP)
 		if exist {
 			metadata.Host = host
