@@ -263,7 +263,7 @@ jobs:
 
   Upload-Release:
     permissions: write-all
-    if: ${{ github.ref_type=='tag' }}
+    # if: ${{ github.ref_type=='tag' }}
     needs: [Build]
     runs-on: ubuntu-latest
     steps:
