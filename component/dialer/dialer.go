@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Dreamacro/clash/component/resolver"
+	"github.com/Dreamacro/clash/log"
 )
 
 type dialFunc func(ctx context.Context, network string, ips []netip.Addr, port string, opt *option) (net.Conn, error)
@@ -307,7 +308,7 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 	if err != nil {
 		return nil, "-1", err
 	}
-
+	log.Debugln("trying resolve network %s address %s ", network, address)
 	var ips []netip.Addr
 	switch network {
 	case "tcp4", "udp4":
@@ -324,11 +325,14 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 		}
 	default:
 		if preferResolver == nil {
+			log.Debugln("lookup address [%s] by proxy", address)
 			ips, err = resolver.LookupIPProxyServerHost(ctx, host)
 		} else {
+			log.Debugln("lookup address [%s] by prefer resolver", address)
 			ips, err = resolver.LookupIPWithResolver(ctx, host, preferResolver)
 		}
 	}
+
 	if err != nil {
 		return nil, "-1", fmt.Errorf("dns resolve failed: %w", err)
 	}

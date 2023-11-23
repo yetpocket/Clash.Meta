@@ -23,6 +23,5 @@ bin/*
 # test suite
 test/config/cache*
 /output
-.vscode/
 .fleet/
 clash

@@ -301,7 +301,11 @@ func listenPacket(ctx context.Context, proxyAdapter C.ProxyAdapter, proxyName st
 
 func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.Msg, cache bool, err error) {
 	cache = true
-	fast, ctx := picker.WithTimeout[*D.Msg](ctx, resolver.DefaultDNSTimeout)
+	type DnsResult struct {
+		m          *D.Msg
+		dns_server string
+	}
+	fast, ctx := picker.WithTimeout[*DnsResult](ctx, resolver.DefaultDNSTimeout)
 	defer fast.Close()
 	domain := msgToDomain(m)
 	for _, client := range clients {
@@ -310,7 +314,11 @@ func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.M
 			return msg, false, err
 		}
 		client := client // shadow define client to ensure the value captured by the closure will not be changed in the next loop
-		fast.Go(func() (*D.Msg, error) {
+		r := &DnsResult{
+			m:          m,
+			dns_server: "unknown",
+		}
+		fast.Go(func() (*DnsResult, error) {
 			log.Debugln("[DNS] resolve %s from %s", domain, client.Address())
 			m, err := client.ExchangeContext(ctx, m)
 			if err != nil {
@@ -320,17 +328,21 @@ func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.M
 				// so we would ignore RCode errors from RCode clients.
 				return nil, errors.New("server failure: " + D.RcodeToString[m.Rcode])
 			}
-			log.Debugln("[DNS] %s --> %s, from %s", domain, msgToIP(m), client.Address())
-			return m, nil
+			log.Debugln("[DNS] %s resolve to ip %s, from dns server %s", domain, msgToIP(m), client.Address())
+			r.dns_server = client.Address()
+			r.m = m
+			return r, nil
 		})
 	}
-
-	msg = fast.Wait()
-	if msg == nil {
+	r := fast.Wait()
+	if r == nil {
 		err = errors.New("all DNS requests failed")
 		if fErr := fast.Error(); fErr != nil {
 			err = fmt.Errorf("%w, first error: %w", err, fErr)
 		}
+		return
 	}
+	msg = r.m
+	log.Debugln("[DNS] %s use %s as the final resolved ip, from dns server %s", domain, msgToIP(r.m), r.dns_server)
 	return
 }
