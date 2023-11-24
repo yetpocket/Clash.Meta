@@ -3,7 +3,6 @@ package dns
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/netip"
 	"strings"
 	"time"
