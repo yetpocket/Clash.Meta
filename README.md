@@ -1,7 +1,7 @@
 
 ## build
 ```
-go build -mod vendor
+CGO_ENABLED=0 go build -mod vendor -tags with_gvisor
 
 ```
 ## vendor

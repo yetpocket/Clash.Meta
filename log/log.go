@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	logCh  = make(chan Event)
+	logCh  = make(chan Event, 1000)
 	source = observable.NewObservable[Event](logCh)
 	level  = INFO
 )
