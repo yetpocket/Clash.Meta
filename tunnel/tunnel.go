@@ -667,7 +667,7 @@ func getRules(metadata *C.Metadata) []C.Rule {
 		log.Debugln("[Rule] use %s rules", metadata.SpecialRules)
 		return sr
 	} else {
-		log.Debugln("[Rule] use default rules")
+		log.Debugln("[Rule] use default rules for %s", metadata.Host)
 		return rules
 	}
 }
