@@ -273,12 +273,21 @@ func (r *Resolver) batchExchange(ctx context.Context, clients []dnsClient, m *D.
 	return batchExchange(ctx, clients, m)
 }
 
+func getDns(clients []dnsClient) []string {
+	dnss := []string{}
+	for _, dns := range clients {
+		dnss = append(dnss, dns.Address())
+	}
+	return dnss
+}
+
 func (r *Resolver) matchPolicy(m *D.Msg) []dnsClient {
 	if r.policy == nil {
 		return nil
 	}
 
 	domain := msgToDomain(m)
+
 	if domain == "" {
 		return nil
 	}
@@ -286,18 +295,26 @@ func (r *Resolver) matchPolicy(m *D.Msg) []dnsClient {
 	record := r.policy.Search(domain)
 	if record != nil {
 		p := record.Data()
+		dnss := getDns(p.data)
+		log.Debugln("[DNS] found nameserver-policy for %s, use dns %s", domain, dnss)
 		return p.GetData()
 	}
 
 	for _, geositeRecord := range r.geositePolicy {
 		matched := geositeRecord.matcher.Match(domain)
 		if matched != geositeRecord.inversedMatching {
-			return geositeRecord.policy.GetData()
+			d := geositeRecord.policy.GetData()
+			dnss := getDns(d)
+			log.Debugln("[DNS] found nameserver-policy geosite for %s, use dns %s", domain, dnss)
+			return d
 		}
 	}
 	metadata := &C.Metadata{Host: domain}
 	for _, domainSetRecord := range r.domainSetPolicy {
 		if ok := domainSetRecord.domainSetProvider.Match(metadata); ok {
+			d := domainSetRecord.policy.GetData()
+			dnss := getDns(d)
+			log.Debugln("[DNS] found nameserver-policy domainset for %s, use dns %s", domain, dnss)
 			return domainSetRecord.policy.GetData()
 		}
 	}

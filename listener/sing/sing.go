@@ -104,8 +104,8 @@ func (h *ListenerHandler) NewConnection(ctx context.Context, conn net.Conn, meta
 }
 
 func (h *ListenerHandler) NewPacketConnection(ctx context.Context, conn network.PacketConn, metadata M.Metadata) error {
-	log.Debugln("[TUN] receive udp packet from peer [unknown] => local [%s], real dest [%s] by protocol [%s]",
-		conn.LocalAddr(), metadata.Destination.AddrString(), metadata.Protocol)
+	log.Debugln("[TUN] receive udp packet from peer [unknown] => local [%s], real dest [%s]",
+		metadata.Source, metadata.Destination.AddrString())
 	if deadline.NeedAdditionalReadDeadline(conn) {
 		conn = deadline.NewFallbackPacketConn(bufio.NewNetPacketConn(conn)) // conn from sing should check NeedAdditionalReadDeadline
 	}

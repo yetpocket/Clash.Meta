@@ -316,7 +316,7 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 	if preferResolver != nil {
 		server = preferResolver.Addr()
 	}
-	log.Debugln("resolving %s://%s through dns servers [%s]", network, address, server)
+
 	var ips []netip.Addr
 	switch network {
 	case "tcp4", "udp4":
@@ -342,12 +342,16 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 	}
 
 	if err != nil {
-		return nil, "-1", fmt.Errorf("dns resolve failed: %w", err)
+		return nil, "-1", fmt.Errorf("[DNS] %s dns resolve failed: %w", host, err)
 	}
 	for i, ip := range ips {
 		if ip.Is4In6() {
 			ips[i] = ip.Unmap()
 		}
+	}
+	if net.ParseIP(host) == nil {
+		// already ip, no need dns resolve
+		log.Debugln("[DNS] resolving %s://%s through dns servers [%s]. dns anwser: %s", network, address, server, ips)
 	}
 	return ips, port, nil
 }

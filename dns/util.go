@@ -322,13 +322,14 @@ func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.M
 			log.Debugln("[DNS] resolve %s from %s", domain, client.Address())
 			m, err := client.ExchangeContext(ctx, m)
 			if err != nil {
+				log.Debugln("[DNS] resolve %s from %s error at %+v", domain, client.Address(), err)
 				return nil, err
 			} else if cache && (m.Rcode == D.RcodeServerFailure || m.Rcode == D.RcodeRefused) {
 				// currently, cache indicates whether this msg was from a RCode client,
 				// so we would ignore RCode errors from RCode clients.
 				return nil, errors.New("server failure: " + D.RcodeToString[m.Rcode])
 			}
-			log.Debugln("[DNS] %s resolve to ip %s, from dns server %s", domain, msgToIP(m), client.Address())
+			log.Debugln("[DNS] %s resolve to %s, by dns server %s", domain, msgToIP(m), client.Address())
 			r.dns_server = client.Address()
 			r.m = m
 			return r, nil
@@ -336,13 +337,13 @@ func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.M
 	}
 	r := fast.Wait()
 	if r == nil {
-		err = errors.New("all DNS requests failed")
+		err = fmt.Errorf("[DNS] target [%s] all DNS requests failed", domain)
 		if fErr := fast.Error(); fErr != nil {
 			err = fmt.Errorf("%w, first error: %w", err, fErr)
 		}
 		return
 	}
 	msg = r.m
-	log.Debugln("[DNS] %s use %s as the final resolved ip, from dns server %s", domain, msgToIP(r.m), r.dns_server)
+	log.Debugln("[DNS] [%s] use %s as final ip, by dns server %s", domain, msgToIP(r.m), r.dns_server)
 	return
 }
