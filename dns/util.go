@@ -208,6 +208,7 @@ func getDialHandler(r *Resolver, proxyAdapter C.ProxyAdapter, proxyName string, 
 					opts = append(opts, dialer.WithInterface(proxyName))
 				}
 			}
+			log.Debugln("[DNS] resolve %s via proxy %s, addr: %s", addr, proxyName, proxyAdapter.Addr())
 
 			if strings.Contains(network, "tcp") {
 				// tcp can resolve host by remote
@@ -225,6 +226,7 @@ func getDialHandler(r *Resolver, proxyAdapter C.ProxyAdapter, proxyName string, 
 						metadata.Host = ""
 						metadata.DstIP = dstIP
 					}
+					log.Debugln("[DNS] resolve %s via proxy %s, addr: %s", addr, proxyName, proxyAdapter.Addr())
 					return proxyAdapter.DialContext(ctx, metadata, opts...)
 				}
 				opts = append(opts, dialer.WithResolver(r))
@@ -248,7 +250,7 @@ func getDialHandler(r *Resolver, proxyAdapter C.ProxyAdapter, proxyName string, 
 				if !proxyAdapter.SupportUDP() {
 					return nil, fmt.Errorf("proxy adapter [%s] UDP is not supported", proxyAdapter)
 				}
-
+				log.Debugln("[DNS] resolve %s via proxy %s, addr: %s", addr, proxyName, proxyAdapter.Addr())
 				packetConn, err := proxyAdapter.ListenPacketContext(ctx, metadata, opts...)
 				if err != nil {
 					return nil, err

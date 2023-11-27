@@ -277,14 +277,17 @@ func preHandleMetadata(metadata *C.Metadata) error {
 	return nil
 }
 
-func resolveMetadata(metadata *C.Metadata) (proxy C.Proxy, rule C.Rule, err error) {
+func resolveMetadata(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
+	var proxy C.Proxy
+	var rule C.Rule
+	var err error
 	if metadata.SpecialProxy != "" {
 		var exist bool
 		proxy, exist = proxies[metadata.SpecialProxy]
 		if !exist {
 			err = fmt.Errorf("proxy %s not found", metadata.SpecialProxy)
 		}
-		return
+		goto out
 	}
 
 	switch mode {
@@ -296,7 +299,9 @@ func resolveMetadata(metadata *C.Metadata) (proxy C.Proxy, rule C.Rule, err erro
 	default:
 		proxy, rule, err = match(metadata)
 	}
-	return
+out:
+	log.Debugln("target %+v rule hit type: %s, data: [%s]", *metadata, rule.RuleType().String(), rule.Payload())
+	return proxy, rule, err
 }
 
 func handleUDPConn(packet C.PacketAdapter) {
