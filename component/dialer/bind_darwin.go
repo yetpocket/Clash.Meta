@@ -7,12 +7,14 @@ import (
 	"syscall"
 
 	"github.com/Dreamacro/clash/component/iface"
+	"github.com/Dreamacro/clash/log"
 
 	"golang.org/x/sys/unix"
 )
 
 func bindControl(ifaceIdx int) controlFn {
 	return func(ctx context.Context, network, address string, c syscall.RawConn) (err error) {
+		log.Debugln("darwin bind address %s to interface %d", address, ifaceIdx)
 		addrPort, err := netip.ParseAddrPort(address)
 		if err == nil && !addrPort.Addr().IsGlobalUnicast() {
 			return
@@ -41,7 +43,7 @@ func bindIfaceToDialer(ifaceName string, dialer *net.Dialer, _ string, _ netip.A
 	if err != nil {
 		return err
 	}
-
+	log.Debugln("bind to interface %s", ifaceName)
 	addControlToDialer(dialer, bindControl(ifaceObj.Index))
 	return nil
 }

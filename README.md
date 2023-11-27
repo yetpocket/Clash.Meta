@@ -1,9 +1,10 @@
 
 ## build
-```
-CGO_ENABLED=0 go build -mod vendor -tags with_gvisor
 
 ```
+CGO_ENABLED=0 go build -mod vendor -tags with_gvisor
+```
+
 ## vendor
 
 ```bash
@@ -13,8 +14,10 @@ go mod vendor
 modvendor -copy="**/*.c **/*.h **/*.proto **/*.dll" -v
 ```
 
+如果需要root权限，vscode 使用remote debug，使用root启动dlv调试
+
 ```
-sudo dlv debug --listen=:2345 --headless=true -- -d testconfig
+sudo dlv exec clash --listen=:2345 --headless=true -- -d testconfig
 ```
 
 ## Configration example

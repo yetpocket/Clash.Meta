@@ -8,10 +8,11 @@
             "name": "Launch",
             "type": "go",
             "request": "launch",
-            "mode": "debug",
-            "program": "${workspaceRoot}/main.go",
+            "mode": "exec",
+            "program": "clash",
             "args": ["-d", "testconfig"],
-            "showLog": true
+            "showLog": true,
+            "console": "integratedTerminal"
         },
         {
             "name": "Connect to server",
