@@ -17,6 +17,7 @@ import (
 	"github.com/Dreamacro/clash/adapter/outbound"
 	"github.com/Dreamacro/clash/adapter/outboundgroup"
 	"github.com/Dreamacro/clash/adapter/provider"
+	"github.com/Dreamacro/clash/common/atomic"
 	N "github.com/Dreamacro/clash/common/net"
 	"github.com/Dreamacro/clash/common/utils"
 	"github.com/Dreamacro/clash/component/auth"
@@ -39,6 +40,7 @@ import (
 	R "github.com/Dreamacro/clash/rules"
 	RP "github.com/Dreamacro/clash/rules/provider"
 	T "github.com/Dreamacro/clash/tunnel"
+	"github.com/jackpal/gateway"
 
 	"gopkg.in/yaml.v3"
 )
@@ -1041,14 +1043,34 @@ func parseNameServer(servers []string, preferH3 bool) ([]dns.NameServer, error) 
 		if err != nil {
 			return nil, fmt.Errorf("DNS NameServer[%d] format error: %s", idx, err.Error())
 		}
-
+		gateway, err := gateway.DiscoverInterface()
+		defaultInterfaceName := dialer.DefaultInterface.Load()
+		infs, err := net.Interfaces()
+		if err != nil {
+			log.Errorln("error when discover default interface %+v", err)
+			goto out
+		}
+		for _, inf := range infs {
+			addrs, err := inf.Addrs()
+			if err != nil {
+				log.Errorln("error when step over interface %s %+v", inf.Name, err)
+				goto out
+			}
+			for _, addr := range addrs {
+				if addr.String() == gateway.String() {
+					defaultInterfaceName = inf.Name
+					goto out
+				}
+			}
+		}
+	out:
 		nameservers = append(
 			nameservers,
 			dns.NameServer{
 				Net:       dnsNetType,
 				Addr:      addr,
 				ProxyName: proxyName,
-				Interface: dialer.DefaultInterface,
+				Interface: atomic.NewTypedValue[string](defaultInterfaceName),
 				Params:    params,
 				PreferH3:  preferH3,
 			},
