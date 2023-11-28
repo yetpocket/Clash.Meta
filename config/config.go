@@ -1064,6 +1064,7 @@ func parseNameServer(servers []string, preferH3 bool) ([]dns.NameServer, error) 
 			}
 		}
 	out:
+		log.Debugln("[DNS] %s use %s as outgoing interface", addr, defaultInterfaceName)
 		nameservers = append(
 			nameservers,
 			dns.NameServer{
