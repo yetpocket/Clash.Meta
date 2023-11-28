@@ -307,6 +307,7 @@ func (p *Proxy) URLTest(ctx context.Context, url string, expectedStatus utils.In
 	}
 
 	t = uint16(time.Since(start) / time.Millisecond)
+	log.Debugln("url-test [%s] through proxy [%s] delay %d", url, p.Name(), t)
 	return
 }
 
