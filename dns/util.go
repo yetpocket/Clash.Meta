@@ -164,16 +164,20 @@ func handleMsgWithEmptyAnswer(r *D.Msg) *D.Msg {
 
 func msgToIP(msg *D.Msg) []netip.Addr {
 	ips := []netip.Addr{}
-
+	cname := []string{}
 	for _, answer := range msg.Answer {
 		switch ans := answer.(type) {
 		case *D.AAAA:
 			ips = append(ips, nnip.IpToAddr(ans.AAAA))
 		case *D.A:
 			ips = append(ips, nnip.IpToAddr(ans.A))
+		case *D.CNAME:
+			cname = append(cname, answer.String())
 		}
 	}
-
+	if len(ips) == 0 && len(cname) != 0 {
+		log.Debugln("dns resolve only cname %s", cname)
+	}
 	return ips
 }
 

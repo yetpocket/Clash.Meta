@@ -334,6 +334,7 @@ func (r *Resolver) shouldOnlyQueryFallback(m *D.Msg) bool {
 
 	for _, df := range r.fallbackDomainFilters {
 		if df.Match(domain) {
+			log.Debugln("%s wait fallback dns server answer", domain)
 			return true
 		}
 	}
@@ -413,6 +414,8 @@ func (r *Resolver) lookupIP(ctx context.Context, host string, dnsType uint16) (i
 func (r *Resolver) asyncExchange(ctx context.Context, client []dnsClient, msg *D.Msg) <-chan *result {
 	ch := make(chan *result, 1)
 	go func() {
+		d := DebugDnsClient(client)
+		log.Debugln("start asyncExchange dns lookup for [%s] by dns server %s", DebugDnsMessageQueryName(msg), d)
 		res, _, err := r.batchExchange(ctx, client, msg)
 		ch <- &result{Msg: res, Error: err}
 	}()
