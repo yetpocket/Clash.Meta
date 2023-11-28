@@ -249,6 +249,10 @@ func updateDNS(c *config.DNS, ruleProvider map[string]provider.RuleProvider, gen
 	}
 
 	r := dns.NewResolver(cfg)
+	//配置解析代理节点域名 DNS 服务器，非必要配置项
+	//配置服务器若查询失败将使用 nameserver，非并发查询
+	// proxy-server-nameserver:
+	// - tls://1.1.1.1
 	pr := dns.NewProxyServerHostResolver(r)
 	m := dns.NewEnhancer(cfg)
 
