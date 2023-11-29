@@ -7,12 +7,12 @@ on:
       - "README.md"
       - ".github/ISSUE_TEMPLATE/**"
     branches:
-      - Alpha
+      - main
     tags:
       - "v*"
   pull_request_target:
     branches:
-      - Alpha
+      - main
       
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
@@ -209,7 +209,7 @@ jobs:
 
   Upload-Release:
     permissions: write-all
-    if: ${{ github.ref_type=='branch' && github.ref=='refs/heads/Alpha' }}
+    if: ${{ github.ref_type=='branch' && github.ref=='refs/heads/main' }}
     needs: [Build]
     runs-on: ubuntu-latest
     steps:
