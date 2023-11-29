@@ -227,6 +227,6 @@ jobs:
         if: ${{  success() }}
         with:
           prerelease: false
-          tag_name: ${{ github.ref_name }}
+          tag_name: latest
           files: bin/*
           generate_release_notes: true
