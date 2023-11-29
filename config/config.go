@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
+	"github.com/Dreamacro/clash/component/dialer"
 	"net"
 	"net/netip"
 	"net/url"
@@ -21,7 +22,6 @@ import (
 	N "github.com/Dreamacro/clash/common/net"
 	"github.com/Dreamacro/clash/common/utils"
 	"github.com/Dreamacro/clash/component/auth"
-	"github.com/Dreamacro/clash/component/dialer"
 	"github.com/Dreamacro/clash/component/fakeip"
 	"github.com/Dreamacro/clash/component/geodata"
 	"github.com/Dreamacro/clash/component/geodata/router"
@@ -40,8 +40,6 @@ import (
 	R "github.com/Dreamacro/clash/rules"
 	RP "github.com/Dreamacro/clash/rules/provider"
 	T "github.com/Dreamacro/clash/tunnel"
-	"github.com/jackpal/gateway"
-
 	"gopkg.in/yaml.v3"
 )
 
@@ -1043,27 +1041,7 @@ func parseNameServer(servers []string, preferH3 bool) ([]dns.NameServer, error) 
 		if err != nil {
 			return nil, fmt.Errorf("DNS NameServer[%d] format error: %s", idx, err.Error())
 		}
-		gateway, err := gateway.DiscoverInterface()
-		defaultInterfaceName := dialer.DefaultInterface.Load()
-		infs, err := net.Interfaces()
-		if err != nil {
-			log.Errorln("error when discover default interface %+v", err)
-			goto out
-		}
-		for _, inf := range infs {
-			addrs, err := inf.Addrs()
-			if err != nil {
-				log.Errorln("error when step over interface %s %+v", inf.Name, err)
-				goto out
-			}
-			for _, addr := range addrs {
-				if addr.String() == gateway.String() {
-					defaultInterfaceName = inf.Name
-					goto out
-				}
-			}
-		}
-	out:
+		defaultInterfaceName := dialer.GetDefaultInterfaceName()
 		log.Debugln("[DNS] %s use %s as outgoing interface", addr, defaultInterfaceName)
 		nameservers = append(
 			nameservers,

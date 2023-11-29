@@ -2,6 +2,8 @@ package dialer
 
 import (
 	"context"
+	"github.com/Dreamacro/clash/log"
+	"github.com/jackpal/gateway"
 	"net"
 
 	"github.com/Dreamacro/clash/common/atomic"
@@ -100,4 +102,35 @@ func WithOption(o option) Option {
 	return func(opt *option) {
 		*opt = o
 	}
+}
+
+func GetDefaultInterfaceName() string {
+	gateway, err := gateway.DiscoverInterface()
+	defaultInterfaceName := DefaultInterface.Load()
+	infs, err := net.Interfaces()
+	if defaultInterfaceName != "" {
+		goto out
+	}
+	if err != nil {
+		log.Errorln("error when discover default interface %+v", err)
+		goto out
+	}
+	for _, inf := range infs {
+		addrs, err := inf.Addrs()
+		if err != nil {
+			log.Errorln("error when step over interface %s %+v", inf.Name, err)
+			goto out
+		}
+		for _, addr := range addrs {
+			if ad := addr.(*net.IPNet); ad != nil {
+				if ad.IP.String() == gateway.String() {
+					defaultInterfaceName = inf.Name
+					goto out
+				}
+			}
+		}
+	}
+out:
+	log.Debugln("default interface %s", defaultInterfaceName)
+	return defaultInterfaceName
 }
