@@ -173,6 +173,7 @@ func (r *Resolver) ExchangeContext(ctx context.Context, m *D.Msg) (msg *D.Msg, e
 	if hit {
 		now := time.Now()
 		msg = cacheM.Copy()
+		log.Debugln("%s hit dns cache %s", q.String(), msgToIP(msg))
 		if expireTime.Before(now) {
 			setMsgTTL(msg, uint32(1)) // Continue fetch
 			continueFetch = true
@@ -321,24 +322,27 @@ func (r *Resolver) matchPolicy(m *D.Msg) []dnsClient {
 	return nil
 }
 
-func (r *Resolver) shouldOnlyQueryFallback(m *D.Msg) bool {
-	if r.fallback == nil || len(r.fallbackDomainFilters) == 0 {
-		return false
-	}
+func (r *Resolver) shouldOnlyQueryFallback(m *D.Msg) (bool, string) {
+	should := false
 
 	domain := msgToDomain(m)
+	if r.fallback == nil || len(r.fallbackDomainFilters) == 0 {
+		goto out
+	}
 
 	if domain == "" {
-		return false
+		goto out
 	}
 
 	for _, df := range r.fallbackDomainFilters {
 		if df.Match(domain) {
-			return true
+			log.Debugln("%s wait fallback dns server answer", domain)
+			should = true
+			goto out
 		}
 	}
-
-	return false
+out:
+	return should, domain
 }
 
 func (r *Resolver) ipExchange(ctx context.Context, m *D.Msg) (msg *D.Msg, err error) {
@@ -347,10 +351,11 @@ func (r *Resolver) ipExchange(ctx context.Context, m *D.Msg) (msg *D.Msg, err er
 		return res.Msg, res.Error
 	}
 
-	onlyFallback := r.shouldOnlyQueryFallback(m)
+	onlyFallback, host := r.shouldOnlyQueryFallback(m)
 
 	if onlyFallback {
 		res := <-r.asyncExchange(ctx, r.fallback, m)
+		log.Debugln("[Host: %s] only need fallback reply from dns server %s", host, DebugDnsClient(r.fallback))
 		return res.Msg, res.Error
 	}
 
@@ -363,8 +368,9 @@ func (r *Resolver) ipExchange(ctx context.Context, m *D.Msg) (msg *D.Msg, err er
 	}
 
 	res := <-msgCh
+	ips := []netip.Addr{}
 	if res.Error == nil {
-		if ips := msgToIP(res.Msg); len(ips) != 0 {
+		if ips = msgToIP(res.Msg); len(ips) != 0 {
 			shouldNotFallback := lo.EveryBy(ips, func(ip netip.Addr) bool {
 				return !r.shouldIPFallback(ip)
 			})
@@ -374,7 +380,7 @@ func (r *Resolver) ipExchange(ctx context.Context, m *D.Msg) (msg *D.Msg, err er
 			}
 		}
 	}
-
+	log.Debugln("[Host: %s] drop previous dns result %s, waiting fallback dns server %s answer", host, ips, DebugDnsClient(r.fallback))
 	res = <-r.asyncExchange(ctx, r.fallback, m)
 	msg, err = res.Msg, res.Error
 	return
@@ -413,6 +419,8 @@ func (r *Resolver) lookupIP(ctx context.Context, host string, dnsType uint16) (i
 func (r *Resolver) asyncExchange(ctx context.Context, client []dnsClient, msg *D.Msg) <-chan *result {
 	ch := make(chan *result, 1)
 	go func() {
+		d := DebugDnsClient(client)
+		log.Debugln("start asyncExchange dns lookup for %s by dns server %s", DebugDnsMessageQueryName(msg), d)
 		res, _, err := r.batchExchange(ctx, client, msg)
 		ch <- &result{Msg: res, Error: err}
 	}()

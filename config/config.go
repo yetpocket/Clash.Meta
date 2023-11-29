@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
+	"github.com/Dreamacro/clash/component/dialer"
 	"net"
 	"net/netip"
 	"net/url"
@@ -17,10 +18,10 @@ import (
 	"github.com/Dreamacro/clash/adapter/outbound"
 	"github.com/Dreamacro/clash/adapter/outboundgroup"
 	"github.com/Dreamacro/clash/adapter/provider"
+	"github.com/Dreamacro/clash/common/atomic"
 	N "github.com/Dreamacro/clash/common/net"
 	"github.com/Dreamacro/clash/common/utils"
 	"github.com/Dreamacro/clash/component/auth"
-	"github.com/Dreamacro/clash/component/dialer"
 	"github.com/Dreamacro/clash/component/fakeip"
 	"github.com/Dreamacro/clash/component/geodata"
 	"github.com/Dreamacro/clash/component/geodata/router"
@@ -39,7 +40,6 @@ import (
 	R "github.com/Dreamacro/clash/rules"
 	RP "github.com/Dreamacro/clash/rules/provider"
 	T "github.com/Dreamacro/clash/tunnel"
-
 	"gopkg.in/yaml.v3"
 )
 
@@ -1041,14 +1041,15 @@ func parseNameServer(servers []string, preferH3 bool) ([]dns.NameServer, error) 
 		if err != nil {
 			return nil, fmt.Errorf("DNS NameServer[%d] format error: %s", idx, err.Error())
 		}
-
+		defaultInterfaceName := dialer.GetDefaultInterfaceName()
+		log.Debugln("[DNS] %s use %s as outgoing interface", addr, defaultInterfaceName)
 		nameservers = append(
 			nameservers,
 			dns.NameServer{
 				Net:       dnsNetType,
 				Addr:      addr,
 				ProxyName: proxyName,
-				Interface: dialer.DefaultInterface,
+				Interface: atomic.NewTypedValue[string](defaultInterfaceName),
 				Params:    params,
 				PreferH3:  preferH3,
 			},

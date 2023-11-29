@@ -14,7 +14,12 @@ import (
 
 func bindControl(ifaceIdx int) controlFn {
 	return func(ctx context.Context, network, address string, c syscall.RawConn) (err error) {
-		log.Debugln("darwin bind address %s to interface %d", address, ifaceIdx)
+		ifaceName, err := net.InterfaceByIndex(ifaceIdx)
+		if err != nil {
+			log.Debugln("darwin bind %s resolve interface %d error at %+v", address, ifaceIdx, err)
+		} else {
+			log.Debugln("darwin bind %s to interface %s", address, ifaceName.Name)
+		}
 		addrPort, err := netip.ParseAddrPort(address)
 		if err == nil && !addrPort.Addr().IsGlobalUnicast() {
 			return

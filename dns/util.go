@@ -164,16 +164,20 @@ func handleMsgWithEmptyAnswer(r *D.Msg) *D.Msg {
 
 func msgToIP(msg *D.Msg) []netip.Addr {
 	ips := []netip.Addr{}
-
+	cname := []string{}
 	for _, answer := range msg.Answer {
 		switch ans := answer.(type) {
 		case *D.AAAA:
 			ips = append(ips, nnip.IpToAddr(ans.AAAA))
 		case *D.A:
 			ips = append(ips, nnip.IpToAddr(ans.A))
+		case *D.CNAME:
+			cname = append(cname, answer.String())
 		}
 	}
-
+	if len(ips) == 0 && len(cname) != 0 {
+		log.Debugln("dns resolve only cname %s", cname)
+	}
 	return ips
 }
 
@@ -304,8 +308,8 @@ func listenPacket(ctx context.Context, proxyAdapter C.ProxyAdapter, proxyName st
 func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.Msg, cache bool, err error) {
 	cache = true
 	type DnsResult struct {
-		m          *D.Msg
-		dns_server string
+		m         *D.Msg
+		dnsServer string
 	}
 	fast, ctx := picker.WithTimeout[*DnsResult](ctx, resolver.DefaultDNSTimeout)
 	defer fast.Close()
@@ -317,11 +321,11 @@ func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.M
 		}
 		client := client // shadow define client to ensure the value captured by the closure will not be changed in the next loop
 		r := &DnsResult{
-			m:          m,
-			dns_server: "unknown",
+			m:         m,
+			dnsServer: "unknown",
 		}
 		fast.Go(func() (*DnsResult, error) {
-			log.Debugln("[DNS] resolve %s from %s", domain, client.Address())
+			log.Debugln("[DNS] [Host: %s] resolve from dns [%s]", domain, client.Address())
 			m, err := client.ExchangeContext(ctx, m)
 			if err != nil {
 				log.Debugln("[DNS] resolve %s from %s error at %+v", domain, client.Address(), err)
@@ -331,8 +335,8 @@ func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.M
 				// so we would ignore RCode errors from RCode clients.
 				return nil, errors.New("server failure: " + D.RcodeToString[m.Rcode])
 			}
-			log.Debugln("[DNS] %s resolve to %s, by dns server %s", domain, msgToIP(m), client.Address())
-			r.dns_server = client.Address()
+			log.Debugln("[DNS] [Host: %s] resolve to %s from dns [%s]", domain, msgToIP(m), client.Address())
+			r.dnsServer = client.Address()
 			r.m = m
 			return r, nil
 		})
@@ -346,6 +350,6 @@ func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.M
 		return
 	}
 	msg = r.m
-	log.Debugln("[DNS] [%s] use %s as final ip, by dns server %s", domain, msgToIP(r.m), r.dns_server)
+	log.Debugln("[DNS] [Host: %s] final selected ip %s from dns %s", domain, msgToIP(r.m), r.dnsServer)
 	return
 }
