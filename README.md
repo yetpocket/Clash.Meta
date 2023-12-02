@@ -1,6 +1,8 @@
 
 ## build
 
+**golang 至少 v1.21.0**
+
 ```
 CGO_ENABLED=0 go build -mod vendor -tags with_gvisor
 ```
