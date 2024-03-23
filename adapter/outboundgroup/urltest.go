@@ -214,6 +214,5 @@ func NewURLTest(option *GroupCommonOption, providers []provider.ProxyProvider, o
 	for _, option := range options {
 		option(urlTest)
 	}
-
 	return urlTest
 }

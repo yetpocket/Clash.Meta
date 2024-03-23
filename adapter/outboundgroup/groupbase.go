@@ -237,8 +237,12 @@ func (gb *GroupBase) onDialFailed(adapterType C.AdapterType, err error) {
 
 		gb.failedTimes++
 		if gb.failedTimes == 1 {
-			log.Debugln("ProxyGroup: %s first failed", gb.Name())
+			log.Debugln("ProxyGroup: %s first failed, async healthchecking", gb.Name())
 			gb.failedTime = time.Now()
+			// 一段时间内首次报错马上健康检查
+			// 避免流量太低，始终无法触发检查，一直使用失败的连接。
+			// 重新找到可用的链接，避免 cafecat 备用地址 profile
+			gb.onlyHealthCheck()
 		} else {
 			if time.Since(gb.failedTime) > gb.failedTimeoutInterval() {
 				gb.failedTimes = 0
@@ -255,6 +259,11 @@ func (gb *GroupBase) onDialFailed(adapterType C.AdapterType, err error) {
 }
 
 func (gb *GroupBase) healthCheck() {
+	gb.onlyHealthCheck()
+	gb.failedTimes = 0
+}
+
+func (gb *GroupBase) onlyHealthCheck() {
 	if gb.failedTesting.Load() {
 		return
 	}
@@ -272,7 +281,6 @@ func (gb *GroupBase) healthCheck() {
 
 	wg.Wait()
 	gb.failedTesting.Store(false)
-	gb.failedTimes = 0
 }
 
 func (gb *GroupBase) failedIntervalTime() int64 {
