@@ -66,7 +66,11 @@ func (p *Pool) LookBack(ip netip.Addr) (string, bool) {
 	p.mux.Lock()
 	defer p.mux.Unlock()
 	ip_str, y := p.store.GetByIP(ip)
-	log.Debugln("lookup get fake ip mapping fakeip [%s] to host [%s]", ip.String(), ip_str)
+	if y {
+		log.Debugln("lookup get fake ip mapping fakeip [%s] to host [%s]", ip.String(), ip_str)
+	}else {
+		log.Debugln("lookup get fake ip mapping fakeip [%s]. not host found", ip.String())
+	}
 	return ip_str, y
 }
 

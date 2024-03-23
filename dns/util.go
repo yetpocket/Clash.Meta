@@ -176,7 +176,11 @@ func msgToIP(msg *D.Msg) []netip.Addr {
 		}
 	}
 	if len(ips) == 0 && len(cname) != 0 {
-		log.Debugln("dns resolve only cname %s", cname)
+		names := []string{}
+		for _, q := range msg.Question {
+			names = append(names, q.Name)
+		}
+		log.Debugln("[DNS] domain %s answer only contain cname %s available", names, cname)
 	}
 	return ips
 }
@@ -325,17 +329,17 @@ func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.M
 			dnsServer: "unknown",
 		}
 		fast.Go(func() (*DnsResult, error) {
-			log.Debugln("[DNS] [Host: %s] resolve from dns [%s]", domain, client.Address())
+			log.Debugln("[DNS] [Host: %s] resolving from dns [%s]", domain, client.Address())
 			m, err := client.ExchangeContext(ctx, m)
 			if err != nil {
-				log.Debugln("[DNS] resolve %s from %s error at %+v", domain, client.Address(), err)
+				log.Debugln("[DNS] resolving %s from %s error at %+v", domain, client.Address(), err)
 				return nil, err
 			} else if cache && (m.Rcode == D.RcodeServerFailure || m.Rcode == D.RcodeRefused) {
 				// currently, cache indicates whether this msg was from a RCode client,
 				// so we would ignore RCode errors from RCode clients.
 				return nil, errors.New("server failure: " + D.RcodeToString[m.Rcode])
 			}
-			log.Debugln("[DNS] [Host: %s] resolve to %s from dns [%s]", domain, msgToIP(m), client.Address())
+			log.Debugln("[DNS] [Host: %s] answer %s from dns [%s]", domain, msgToIP(m), client.Address())
 			r.dnsServer = client.Address()
 			r.m = m
 			return r, nil
@@ -350,6 +354,6 @@ func batchExchange(ctx context.Context, clients []dnsClient, m *D.Msg) (msg *D.M
 		return
 	}
 	msg = r.m
-	log.Debugln("[DNS] [Host: %s] final selected ip %s from dns %s", domain, msgToIP(r.m), r.dnsServer)
+	log.Debugln("[DNS] [Host: %s] final ip %s from dns server %s", domain, msgToIP(r.m), r.dnsServer)
 	return
 }

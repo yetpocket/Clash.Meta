@@ -183,7 +183,7 @@ func withResolver(resolver *Resolver) handler {
 		ctx.SetType(context.DNSTypeRaw)
 
 		q := r.Question[0]
-		log.Debugln("[DNS] trying resolve dns name[%s: %s]", D.Type(q.Qtype).String(), q.Name)
+		log.Debugln("[DNS] try resolving dns name[%s: %s]", D.Type(q.Qtype).String(), q.Name)
 		// return a empty AAAA msg when ipv6 disabled
 		if !resolver.ipv6 && q.Qtype == D.TypeAAAA {
 			return handleMsgWithEmptyAnswer(r), nil

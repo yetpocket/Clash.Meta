@@ -300,7 +300,6 @@ func resolveMetadata(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 		proxy, rule, err = match(metadata)
 	}
 out:
-	log.Debugln("target %+v rule hit type: %s, data: [%s]", *metadata, rule.RuleType().String(), rule.Payload())
 	return proxy, rule, err
 }
 

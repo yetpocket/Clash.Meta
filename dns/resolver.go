@@ -336,7 +336,7 @@ func (r *Resolver) shouldOnlyQueryFallback(m *D.Msg) (bool, string) {
 
 	for _, df := range r.fallbackDomainFilters {
 		if df.Match(domain) {
-			log.Debugln("%s wait fallback dns server answer", domain)
+			log.Debugln("%s hit in fallback domain filter. Waiting for fallback dns server answer", domain)
 			should = true
 			goto out
 		}

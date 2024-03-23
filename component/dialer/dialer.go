@@ -308,14 +308,14 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 	if err != nil {
 		return nil, "-1", err
 	}
-	server := ""
-	// preferResolver != nil 只是检查接口不是nil
-	// 但里面的值可能是nil
-	// https://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
-	// https://go.dev/play/p/Isoo0CcAvr
-	if preferResolver != nil {
-		server = preferResolver.Addr()
-	}
+	// server := ""
+	// // preferResolver != nil 只是检查接口不是nil
+	// // 但里面的值可能是nil
+	// // https://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
+	// // https://go.dev/play/p/Isoo0CcAvr
+	// if preferResolver != nil {
+	// 	server = preferResolver.Addr()
+	// }
 
 	var ips []netip.Addr
 	switch network {
@@ -333,10 +333,10 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 		}
 	default:
 		if preferResolver == nil {
-			log.Debugln("lookup [%s] proxy server ip address", address)
+			log.Debugln("lookup %s proxy server ip address", address)
 			ips, err = resolver.LookupIPProxyServerHost(ctx, host)
 		} else {
-			log.Debugln("lookup [%s] proxy server by resolver", address)
+			log.Debugln("lookup %s proxy server by resolver", address)
 			ips, err = resolver.LookupIPWithResolver(ctx, host, preferResolver)
 		}
 	}
@@ -351,8 +351,8 @@ func parseAddr(ctx context.Context, network, address string, preferResolver reso
 	}
 	if net.ParseIP(host) == nil {
 		// already ip, no need dns resolve
-		log.Debugln("[DNS] resolving %s://%s through dns servers [%s]. dns answer: %s", network, address, server, ips)
 	}
+	log.Debugln("[DNS] domain %s resolved. dns answer: %s", address, ips)
 	return ips, port, nil
 }
 
